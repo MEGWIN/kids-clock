@@ -421,6 +421,8 @@
       <span style="font-weight:800;color:#c0427a">じ</span>
       <select id="alarmMin"></select>
       <span style="font-weight:800;color:#c0427a">ふん</span>
+      <select id="alarmSec"></select>
+      <span style="font-weight:800;color:#c0427a">びょう</span>
       <button class="alarm-set-btn" onclick="setAlarm()">セット！</button>
       <button class="alarm-cancel-btn" onclick="cancelAlarm()">けす</button>
     </div>
@@ -607,12 +609,13 @@ function speakTime() {
 }
 
 // ===== アラーム =====
-let alarmHour = null, alarmMin = null, alarmFired = false;
+let alarmHour = null, alarmMin = null, alarmSec = null, alarmFired = false;
 let alarmInterval = null;
 
 function buildSelects() {
   const hSel = document.getElementById('alarmHour');
   const mSel = document.getElementById('alarmMin');
+  const sSel = document.getElementById('alarmSec');
   for (let i = 0; i < 24; i++) {
     const o = document.createElement('option');
     o.value = i; o.textContent = String(i).padStart(2,'0');
@@ -623,22 +626,29 @@ function buildSelects() {
     o.value = i; o.textContent = String(i).padStart(2,'0');
     mSel.appendChild(o);
   }
+  for (let i = 0; i < 60; i++) {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = String(i).padStart(2,'0');
+    sSel.appendChild(o);
+  }
   // デフォルトを現在時刻に
   const now = new Date();
   hSel.value = now.getHours();
   mSel.value = now.getMinutes() + 1 < 60 ? now.getMinutes() + 1 : 0;
+  sSel.value = 0;
 }
 
 function setAlarm() {
   alarmHour = parseInt(document.getElementById('alarmHour').value);
   alarmMin = parseInt(document.getElementById('alarmMin').value);
+  alarmSec = parseInt(document.getElementById('alarmSec').value);
   alarmFired = false;
   document.getElementById('alarmStatus').textContent =
-    `⏰ ${String(alarmHour).padStart(2,'0')}じ ${String(alarmMin).padStart(2,'0')}ふん にアラームをセットしたよ！`;
+    `⏰ ${String(alarmHour).padStart(2,'0')}じ ${String(alarmMin).padStart(2,'0')}ふん ${String(alarmSec).padStart(2,'0')}びょう にアラームをセットしたよ！`;
 }
 
 function cancelAlarm() {
-  alarmHour = null; alarmMin = null;
+  alarmHour = null; alarmMin = null; alarmSec = null;
   if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
   window.speechSynthesis && window.speechSynthesis.cancel();
   document.getElementById('alarmStatus').textContent = 'アラームをけしたよ。';
@@ -646,7 +656,7 @@ function cancelAlarm() {
 
 function checkAlarm(now) {
   if (alarmHour === null || alarmFired) return;
-  if (now.getHours() === alarmHour && now.getMinutes() === alarmMin && now.getSeconds() === 0) {
+  if (now.getHours() === alarmHour && now.getMinutes() === alarmMin && now.getSeconds() === alarmSec) {
     alarmFired = true;
     ringAlarm();
   }
