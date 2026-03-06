@@ -186,12 +186,18 @@
     width: 340px;
   }
 
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
   .speak-btn {
     background: linear-gradient(135deg, #e8609a, #c0427a);
     color: white;
     border: none;
     border-radius: 50px;
-    padding: 14px 36px;
+    padding: 14px 28px;
     font-size: 1.1rem;
     font-weight: 800;
     font-family: inherit;
@@ -210,6 +216,32 @@
   .speak-btn:active {
     transform: translateY(1px);
     box-shadow: 0 2px 8px rgba(192,66,122,0.4);
+  }
+
+  .quiz-btn {
+    background: linear-gradient(135deg, #66bb6a, #43a047);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(67,160,71,0.4), 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.15s ease;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .quiz-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(67,160,71,0.5);
+  }
+  .quiz-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(67,160,71,0.4);
   }
 
   /* アラームエリア */
@@ -317,7 +349,7 @@
 </head>
 <body>
 
-<h1>🌸 ちいくとけい 🌸</h1>
+<h1>🌸 とけいM 🌸</h1>
 
 <div class="clock-wrapper">
   <div class="clock-outer"></div>
@@ -337,7 +369,10 @@
 
 <div class="controls">
   <div class="speech-bubble" id="speechBubble">🌸 ボタンをおしてみてね！</div>
-  <button class="speak-btn" onclick="speakTime()">🔔 いまなんじ？</button>
+  <div class="btn-row">
+    <button class="speak-btn" onclick="speakTime()">🔔 いまなんじ？</button>
+    <button class="quiz-btn" id="quizBtn" onclick="quizTime()">📝 もんだい！</button>
+  </div>
 
   <div class="alarm-area">
     <div class="alarm-title">⏰ アラームをセットする</div>
@@ -597,6 +632,91 @@ function ringAlarm() {
       window.speechSynthesis.speak(u2);
     }
   }, 3000);
+}
+
+// ===== もんだいモード =====
+let quizActive = false;
+let quizTimer = null;
+
+function quizTime() {
+  if (quizActive) return;
+  quizActive = true;
+  document.getElementById('quizBtn').style.opacity = '0.5';
+
+  // ランダムな時刻を生成
+  const qH = Math.floor(Math.random() * 12) + 1;
+  const qM = Math.floor(Math.random() * 60);
+  const qS = Math.floor(Math.random() * 60);
+
+  // 時計を止めて針をランダム位置に設定
+  clockPaused = true;
+  const hourDeg = (qH / 12) * 360 + (qM / 60) * 30;
+  const minDeg = (qM / 60) * 360 + (qS / 60) * 6;
+  const secDeg = (qS / 60) * 360;
+
+  document.getElementById('hourHand').style.transition = 'transform 0.5s ease';
+  document.getElementById('minuteHand').style.transition = 'transform 0.5s ease';
+  document.getElementById('secondHand').style.transition = 'transform 0.5s ease';
+  document.getElementById('hourHand').style.transform = `rotate(${hourDeg}deg)`;
+  document.getElementById('minuteHand').style.transform = `rotate(${minDeg}deg)`;
+  document.getElementById('secondHand').style.transform = `rotate(${secDeg}deg)`;
+
+  // 吹き出し表示
+  document.getElementById('speechBubble').textContent = '📝 もんだい！いま なんじ なんぷん なんびょう？';
+
+  // 音声で出題
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const q = new SpeechSynthesisUtterance('もんだいです。いま、なんじ、なんぷん、なんびょうですか？');
+    q.lang = 'ja-JP';
+    q.rate = 0.82;
+    q.pitch = 1.3;
+    window.speechSynthesis.speak(q);
+  }
+
+  // 10秒後に正解を読み上げ
+  quizTimer = setTimeout(() => {
+    const answerText = `せいかいは、${qH}じ、${qM}ふん、${qS}びょうです！`;
+    document.getElementById('speechBubble').textContent = `🎉 せいかい：${qH}じ ${qM}ふん ${qS}びょう！`;
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const a = new SpeechSynthesisUtterance(answerText);
+      a.lang = 'ja-JP';
+      a.rate = 0.82;
+      a.pitch = 1.3;
+
+      a.onend = () => {
+        // 「できたかな？」
+        const done = new SpeechSynthesisUtterance('できたかな？');
+        done.lang = 'ja-JP';
+        done.rate = 0.82;
+        done.pitch = 1.4;
+        done.onend = () => {
+          // 現在時刻に復帰
+          document.getElementById('hourHand').style.transition = '';
+          document.getElementById('minuteHand').style.transition = '';
+          document.getElementById('secondHand').style.transition = '';
+          clockPaused = false;
+          quizActive = false;
+          document.getElementById('quizBtn').style.opacity = '';
+          document.getElementById('speechBubble').textContent = '🌸 ボタンをおしてみてね！';
+        };
+        window.speechSynthesis.speak(done);
+      };
+
+      window.speechSynthesis.speak(a);
+    } else {
+      setTimeout(() => {
+        clockPaused = false;
+        quizActive = false;
+        document.getElementById('quizBtn').style.opacity = '';
+        document.getElementById('hourHand').style.transition = '';
+        document.getElementById('minuteHand').style.transition = '';
+        document.getElementById('secondHand').style.transition = '';
+      }, 3000);
+    }
+  }, 10000);
 }
 
 // ===== 初期化 =====
