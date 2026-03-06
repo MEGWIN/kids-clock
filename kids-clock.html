@@ -714,8 +714,8 @@ function quizTime(difficulty) {
   let qM, qS;
 
   if (difficulty === 'easy') {
-    // やさしい: 分は5の倍数、秒は0
-    qM = Math.floor(Math.random() * 12) * 5;
+    // やさしい: 分も秒も0（時だけ読む）
+    qM = 0;
     qS = 0;
   } else if (difficulty === 'normal') {
     // ふつう: 分はランダム、秒は0
