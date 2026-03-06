@@ -560,7 +560,7 @@ function updateClock() {
   const s = now.getSeconds();
 
   const hourDeg = (h / 12) * 360 + (m / 60) * 30;
-  const minDeg = (m / 60) * 360 + (s / 60) * 6;
+  const minDeg = (m / 60) * 360;
   const secDeg = (s / 60) * 360;
 
   document.getElementById('hourHand').style.transform = `rotate(${hourDeg}deg)`;
@@ -693,7 +693,7 @@ function quizTime() {
   // 時計を止めて針をランダム位置に設定
   clockPaused = true;
   const hourDeg = (qH / 12) * 360 + (qM / 60) * 30;
-  const minDeg = (qM / 60) * 360 + (qS / 60) * 6;
+  const minDeg = (qM / 60) * 360;
   const secDeg = (qS / 60) * 360;
 
   document.getElementById('hourHand').style.transition = 'transform 0.5s ease';
