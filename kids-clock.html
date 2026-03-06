@@ -223,8 +223,8 @@
     color: white;
     border: none;
     border-radius: 50px;
-    padding: 14px 28px;
-    font-size: 1.1rem;
+    padding: 12px 14px;
+    font-size: 0.9rem;
     font-weight: 800;
     font-family: inherit;
     cursor: pointer;
@@ -233,7 +233,9 @@
     letter-spacing: 1px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 4px;
+    flex: 1;
   }
   .quiz-btn:hover {
     transform: translateY(-2px);
@@ -242,6 +244,14 @@
   .quiz-btn:active {
     transform: translateY(1px);
     box-shadow: 0 2px 8px rgba(67,160,71,0.4);
+  }
+  .quiz-easy {
+    background: linear-gradient(135deg, #aed581, #8bc34a);
+    box-shadow: 0 4px 16px rgba(139,195,74,0.4), 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .quiz-hard {
+    background: linear-gradient(135deg, #ff8a65, #e64a19);
+    box-shadow: 0 4px 16px rgba(230,74,25,0.4), 0 2px 4px rgba(0,0,0,0.1);
   }
 
   /* アラームエリア */
@@ -411,7 +421,11 @@
   <div class="speech-bubble" id="speechBubble">🌸 ボタンをおしてみてね！</div>
   <div class="btn-row">
     <button class="speak-btn" onclick="speakTime()">🔔 いまなんじ？</button>
-    <button class="quiz-btn" id="quizBtn" onclick="quizTime()">📝 もんだい！</button>
+  </div>
+  <div class="btn-row">
+    <button class="quiz-btn quiz-easy" onclick="quizTime('easy')">🌟 やさしい</button>
+    <button class="quiz-btn" onclick="quizTime('normal')">📝 ふつう</button>
+    <button class="quiz-btn quiz-hard" onclick="quizTime('hard')">🔥 むずかしい</button>
   </div>
 
   <div class="alarm-area">
@@ -690,15 +704,28 @@ function ringAlarm() {
 let quizActive = false;
 let quizTimer = null;
 
-function quizTime() {
+function quizTime(difficulty) {
   if (quizActive) return;
   quizActive = true;
-  document.getElementById('quizBtn').style.opacity = '0.5';
+  document.querySelectorAll('.quiz-btn').forEach(b => b.style.opacity = '0.5');
 
-  // ランダムな時刻を生成
+  // 難易度に応じて時刻を生成
   const qH = Math.floor(Math.random() * 12) + 1;
-  const qM = Math.floor(Math.random() * 60);
-  const qS = Math.floor(Math.random() * 60);
+  let qM, qS;
+
+  if (difficulty === 'easy') {
+    // やさしい: 分は5の倍数、秒は0
+    qM = Math.floor(Math.random() * 12) * 5;
+    qS = 0;
+  } else if (difficulty === 'normal') {
+    // ふつう: 分はランダム、秒は0
+    qM = Math.floor(Math.random() * 60);
+    qS = 0;
+  } else {
+    // むずかしい: 全部ランダム
+    qM = Math.floor(Math.random() * 60);
+    qS = Math.floor(Math.random() * 60);
+  }
 
   // 時計を止めて針をランダム位置に設定
   clockPaused = true;
@@ -811,7 +838,7 @@ function finishQuiz() {
   document.getElementById('secondHand').style.transition = '';
   clockPaused = false;
   quizActive = false;
-  document.getElementById('quizBtn').style.opacity = '';
+  document.querySelectorAll('.quiz-btn').forEach(b => b.style.opacity = '');
   document.getElementById('speechBubble').textContent = '🌸 ボタンをおしてみてね！';
 }
 
