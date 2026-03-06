@@ -373,6 +373,17 @@
     z-index: 30 !important;
     text-shadow: 0 0 8px currentColor, 0 0 16px currentColor !important;
   }
+
+  @keyframes answerBounce {
+    0%, 25%, 100% { transform: scale(1); }
+    12% { transform: scale(1.5); }
+  }
+  .answer-pop {
+    display: inline-block;
+    animation: answerBounce 2.4s ease-in-out infinite;
+    font-size: 1.15em;
+    color: var(--pink-dark);
+  }
 </style>
 </head>
 <body>
@@ -745,8 +756,8 @@ function showExplanation(qH, qM, qS) {
       clearExplainCanvas();
       document.querySelectorAll('.number-pop').forEach(el => el.classList.remove('number-pop'));
 
-      document.getElementById('speechBubble').textContent =
-        `🎉 こたえは ${qH}じ ${qM}ふん ${qS}びょう！できたかな？`;
+      document.getElementById('speechBubble').innerHTML =
+        `🎉 こたえは <span class="answer-pop">${qH}じ</span> <span class="answer-pop" style="animation-delay:0.8s">${qM}ふん</span> <span class="answer-pop" style="animation-delay:1.6s">${qS}びょう</span>！できたかな？`;
 
       if ('speechSynthesis' in window) {
         const u = new SpeechSynthesisUtterance(
@@ -829,32 +840,27 @@ function drawExplainArc(type, value) {
   canvas.height = size;
   const ctx = canvas.getContext('2d');
 
-  if (value === 0) return;
+  // 時のときだけセクターをハイライト（分・秒は表示なし）
+  if (type !== 'hour') return;
 
+  const sectorIdx = value % 12;
   const cx = size / 2, cy = size / 2;
-  const start = -Math.PI / 2;
-  let end, r, color;
+  const r = size / 2;
+  const innerR = r * 0.58;
 
-  if (type === 'hour') {
-    end = (value / 12) * Math.PI * 2 - Math.PI / 2;
-    r = size * 0.28;
-    color = 'rgba(21,101,192,0.18)';
-  } else if (type === 'minute') {
-    end = (value / 60) * Math.PI * 2 - Math.PI / 2;
-    r = size * 0.38;
-    color = 'rgba(229,57,53,0.18)';
-  } else {
-    end = (value / 60) * Math.PI * 2 - Math.PI / 2;
-    r = size * 0.42;
-    color = 'rgba(51,51,51,0.15)';
-  }
+  const startAngle = (sectorIdx / 12) * Math.PI * 2 - Math.PI / 2;
+  const endAngle = ((sectorIdx + 1) / 12) * Math.PI * 2 - Math.PI / 2;
 
+  // ドーナツ型セクター（外側リング部分のみ）
   ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.arc(cx, cy, r, start, end);
+  ctx.arc(cx, cy, r, startAngle, endAngle);
+  ctx.arc(cx, cy, innerR, endAngle, startAngle, true);
   ctx.closePath();
-  ctx.fillStyle = color;
+  ctx.fillStyle = sectorColors[sectorIdx] + 'bb';
   ctx.fill();
+  ctx.strokeStyle = sectorColors[sectorIdx];
+  ctx.lineWidth = 3;
+  ctx.stroke();
 }
 
 function clearExplainCanvas() {
