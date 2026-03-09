@@ -506,18 +506,6 @@ function placeNumbers() {
     span.style.color = '#1565c0'; // 青
     span.style.transform = 'translate(-50%, -50%)';
     layer.appendChild(span);
-
-    // 「じ」ラベル
-    const ji = document.createElement('span');
-    ji.textContent = 'じ';
-    ji.style.left = (x + Math.cos(angle) * size * 0.055) + 'px';
-    ji.style.top = (y + Math.sin(angle) * size * 0.055) + 'px';
-    ji.style.position = 'absolute';
-    ji.style.fontSize = (size * 0.032) + 'px';
-    ji.style.fontWeight = '700';
-    ji.style.color = '#5c8ac7';
-    ji.style.transform = 'translate(-50%, -50%)';
-    layer.appendChild(ji);
   }
 
   // 分の数字（1〜60）を外周近くに配置
@@ -586,19 +574,27 @@ function updateClock() {
   checkAlarm(now);
 }
 
+// ===== 午前・午後ヘルパー =====
+function ampm(h24) {
+  const period = h24 < 12 ? 'ごぜん' : 'ごご';
+  const h12 = h24 % 12 || 12;
+  return { period, h12 };
+}
+
 // ===== 読み上げ（止めて→しゃべって→再開）=====
 function speakTime() {
   const now = new Date();
   const h = now.getHours();
   const m = now.getMinutes();
   const s = now.getSeconds();
+  const { period, h12 } = ampm(h);
 
   // 針をピタッと止める
   clockPaused = true;
   document.getElementById('secondHand').style.transition = 'transform 0.1s ease-out';
 
-  const text = `${h}じ、${m}ふん、${s}びょうです！`;
-  document.getElementById('speechBubble').textContent = `🕐 ${h}じ ${m}ふん ${s}びょう！`;
+  const text = `${period}、${h12}じ、${m}ふん、${s}びょうです！`;
+  document.getElementById('speechBubble').textContent = `🕐 ${period} ${h12}じ ${m}ふん ${s}びょう！`;
 
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
@@ -657,8 +653,9 @@ function setAlarm() {
   alarmMin = parseInt(document.getElementById('alarmMin').value);
   alarmSec = parseInt(document.getElementById('alarmSec').value);
   alarmFired = false;
+  const { period: ap, h12: ah } = ampm(alarmHour);
   document.getElementById('alarmStatus').textContent =
-    `⏰ ${String(alarmHour).padStart(2,'0')}じ ${String(alarmMin).padStart(2,'0')}ふん ${String(alarmSec).padStart(2,'0')}びょう にアラームをセットしたよ！`;
+    `⏰ ${ap} ${ah}じ ${String(alarmMin).padStart(2,'0')}ふん ${String(alarmSec).padStart(2,'0')}びょう にアラームをセットしたよ！`;
 }
 
 function cancelAlarm() {
@@ -680,8 +677,9 @@ function ringAlarm() {
   document.getElementById('speechBubble').textContent = `⏰ アラームの じかんだよ！`;
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
+    const { period: ap, h12: ah } = ampm(alarmHour);
     const utter = new SpeechSynthesisUtterance(
-      `アラームの時間です！${alarmHour}じ${alarmMin}ふんになりましたよ！`);
+      `アラームの時間です！${ap}、${ah}じ、${alarmMin}ふんになりましたよ！`);
     utter.lang = 'ja-JP';
     utter.rate = 0.85;
     utter.pitch = 1.4;
