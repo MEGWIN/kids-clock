@@ -691,7 +691,7 @@ function updateSimpleHighlights() {
   // デジタル時計
   const mm = String(m).padStart(2,'0');
   const ss = String(s).padStart(2,'0');
-  document.getElementById('digitalClock').textContent = `${period} ${h12}:${mm}:${ss}`;
+  document.getElementById('digitalClock').innerHTML = `${period} <span style="color:#e53935">${h12}</span>:<span style="color:#1565c0">${mm}</span>:<span style="color:#333">${ss}</span>`;
 
   // 吹き出し
   document.getElementById('speechBubble').innerHTML = `🕐 ${period} <span style="color:#e53935;font-weight:800">${h12}じ</span> <span style="color:#1565c0;font-weight:800">${m}ふん</span>`;
