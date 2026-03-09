@@ -689,13 +689,12 @@ function updateSimpleHighlights() {
   if (minEl) minEl.classList.add('number-pop');
 
   // デジタル時計
-  const hh = String(now.getHours()).padStart(2,'0');
   const mm = String(m).padStart(2,'0');
   const ss = String(s).padStart(2,'0');
-  document.getElementById('digitalClock').textContent = `${hh}:${mm}:${ss}`;
+  document.getElementById('digitalClock').textContent = `${period} ${h12}:${mm}:${ss}`;
 
   // 吹き出し
-  document.getElementById('speechBubble').textContent = `🕐 ${period} ${h12}じ ${m}ふん`;
+  document.getElementById('speechBubble').innerHTML = `🕐 ${period} <span style="color:#e53935;font-weight:800">${h12}じ</span> <span style="color:#1565c0;font-weight:800">${m}ふん</span>`;
 }
 
 // ===== アラーム =====
