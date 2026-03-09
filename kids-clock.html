@@ -738,13 +738,24 @@ function quizTime(difficulty) {
   document.getElementById('minuteHand').style.transform = `rotate(${minDeg}deg)`;
   document.getElementById('secondHand').style.transform = `rotate(${secDeg}deg)`;
 
-  // 吹き出し表示
-  document.getElementById('speechBubble').textContent = '📝 もんだい！いま なんじ なんぷん なんびょう？';
+  // 難易度に応じた出題テキスト
+  let bubbleText, speechText;
+  if (difficulty === 'easy') {
+    bubbleText = '📝 もんだい！いま なんじ？';
+    speechText = 'もんだいです。いま、なんじですか？';
+  } else if (difficulty === 'normal') {
+    bubbleText = '📝 もんだい！いま なんじ なんぷん？';
+    speechText = 'もんだいです。いま、なんじ、なんぷんですか？';
+  } else {
+    bubbleText = '📝 もんだい！いま なんじ なんぷん なんびょう？';
+    speechText = 'もんだいです。いま、なんじ、なんぷん、なんびょうですか？';
+  }
 
-  // 音声で出題
+  document.getElementById('speechBubble').textContent = bubbleText;
+
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
-    const q = new SpeechSynthesisUtterance('もんだいです。いま、なんじ、なんぷん、なんびょうですか？');
+    const q = new SpeechSynthesisUtterance(speechText);
     q.lang = 'ja-JP';
     q.rate = 0.82;
     q.pitch = 1.3;
@@ -753,15 +764,15 @@ function quizTime(difficulty) {
 
   // 10秒後に解説開始
   quizTimer = setTimeout(() => {
-    showExplanation(qH, qM, qS);
+    showExplanation(qH, qM, qS, difficulty);
   }, 10000);
 }
 
 // ===== 解説モード =====
-function showExplanation(qH, qM, qS) {
+function showExplanation(qH, qM, qS, difficulty) {
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
-  const steps = [
+  const allSteps = [
     {
       hand: 'hour',
       value: qH,
@@ -782,6 +793,22 @@ function showExplanation(qH, qM, qS) {
     }
   ];
 
+  // 難易度に応じてステップを絞る
+  let steps, answerHTML, answerSpeech;
+  if (difficulty === 'easy') {
+    steps = [allSteps[0]];
+    answerHTML = `🎉 こたえは <span class="answer-pop">${qH}じ</span>！できたかな？`;
+    answerSpeech = `だから、${qH}じだよ！できたかな？`;
+  } else if (difficulty === 'normal') {
+    steps = [allSteps[0], allSteps[1]];
+    answerHTML = `🎉 こたえは <span class="answer-pop">${qH}じ</span> <span class="answer-pop" style="animation-delay:0.8s">${qM}ふん</span>！できたかな？`;
+    answerSpeech = `だから、${qH}じ、${qM}ふんだよ！できたかな？`;
+  } else {
+    steps = allSteps;
+    answerHTML = `🎉 こたえは <span class="answer-pop">${qH}じ</span> <span class="answer-pop" style="animation-delay:0.8s">${qM}ふん</span> <span class="answer-pop" style="animation-delay:1.6s">${qS}びょう</span>！できたかな？`;
+    answerSpeech = `だから、${qH}じ、${qM}ふん、${qS}びょうだよ！できたかな？`;
+  }
+
   let idx = 0;
 
   function doStep() {
@@ -791,12 +818,10 @@ function showExplanation(qH, qM, qS) {
       clearExplainCanvas();
       document.querySelectorAll('.number-pop').forEach(el => el.classList.remove('number-pop'));
 
-      document.getElementById('speechBubble').innerHTML =
-        `🎉 こたえは <span class="answer-pop">${qH}じ</span> <span class="answer-pop" style="animation-delay:0.8s">${qM}ふん</span> <span class="answer-pop" style="animation-delay:1.6s">${qS}びょう</span>！できたかな？`;
+      document.getElementById('speechBubble').innerHTML = answerHTML;
 
       if ('speechSynthesis' in window) {
-        const u = new SpeechSynthesisUtterance(
-          `だから、${qH}じ、${qM}ふん、${qS}びょうだよ！できたかな？`);
+        const u = new SpeechSynthesisUtterance(answerSpeech);
         u.lang = 'ja-JP'; u.rate = 0.82; u.pitch = 1.3;
         u.onend = finishQuiz;
         window.speechSynthesis.speak(u);
