@@ -131,6 +131,21 @@
     text-align: center;
   }
 
+  /* デジタル時計 */
+  .digital-clock {
+    position: absolute;
+    top: 32%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #555;
+    z-index: 5;
+    pointer-events: none;
+    letter-spacing: 1px;
+    display: none;
+  }
+
   /* 中心ドット */
   .center-dot {
     position: absolute;
@@ -421,6 +436,8 @@
     <canvas class="sector-canvas" id="explainCanvas" style="pointer-events:none;"></canvas>
     <!-- 数字レイヤー -->
     <div class="number" id="numbersLayer"></div>
+    <!-- デジタル時計 -->
+    <div class="digital-clock" id="digitalClock"></div>
     <!-- 針 -->
     <div class="hand hour-hand" id="hourHand"></div>
     <div class="hand minute-hand" id="minuteHand"></div>
@@ -643,11 +660,13 @@ function simpleTime() {
     simpleActive = false;
     clearExplainCanvas();
     document.querySelectorAll('.number-pop').forEach(el => el.classList.remove('number-pop'));
+    document.getElementById('digitalClock').style.display = 'none';
     document.getElementById('speechBubble').textContent = '🌸 ボタンをおしてみてね！';
     return;
   }
 
   simpleActive = true;
+  document.getElementById('digitalClock').style.display = '';
   updateSimpleHighlights();
 }
 
@@ -656,6 +675,7 @@ function updateSimpleHighlights() {
   const now = new Date();
   const h12 = now.getHours() % 12 || 12;
   const m = now.getMinutes();
+  const s = now.getSeconds();
   const { period } = ampm(now.getHours());
 
   // セクターハイライト
@@ -668,9 +688,14 @@ function updateSimpleHighlights() {
   const minEl = document.querySelector(`[data-minute="${m}"]`);
   if (minEl) minEl.classList.add('number-pop');
 
+  // デジタル時計
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(m).padStart(2,'0');
+  const ss = String(s).padStart(2,'0');
+  document.getElementById('digitalClock').textContent = `${hh}:${mm}:${ss}`;
+
   // 吹き出し
-  document.getElementById('speechBubble').innerHTML =
-    `🕐 <span class="answer-pop">${period}</span> <span class="answer-pop" style="animation-delay:0.8s">${h12}じ</span> <span class="answer-pop" style="animation-delay:1.6s">${m}ふん</span>`;
+  document.getElementById('speechBubble').textContent = `🕐 ${period} ${h12}じ ${m}ふん`;
 }
 
 // ===== アラーム =====
