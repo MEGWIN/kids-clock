@@ -217,6 +217,18 @@
     transform: translateY(1px);
     box-shadow: 0 2px 8px rgba(192,66,122,0.4);
   }
+  .simple-btn {
+    background: linear-gradient(135deg, #ffb74d, #ff9800);
+    box-shadow: 0 4px 16px rgba(255,152,0,0.4), 0 2px 4px rgba(0,0,0,0.1);
+    padding: 14px 20px;
+    font-size: 1rem;
+  }
+  .simple-btn:hover {
+    box-shadow: 0 6px 20px rgba(255,152,0,0.5);
+  }
+  .simple-btn:active {
+    box-shadow: 0 2px 8px rgba(255,152,0,0.4);
+  }
 
   .quiz-btn {
     background: linear-gradient(135deg, #66bb6a, #43a047);
@@ -421,6 +433,7 @@
   <div class="speech-bubble" id="speechBubble">🌸 ボタンをおしてみてね！</div>
   <div class="btn-row">
     <button class="speak-btn" onclick="speakTime()">🔔 いまなんじ？</button>
+    <button class="speak-btn simple-btn" onclick="simpleTime()">🌼 かんたん</button>
   </div>
   <div class="btn-row">
     <button class="quiz-btn quiz-easy" onclick="quizTime('easy')">🌟 やさしい</button>
@@ -618,6 +631,56 @@ function speakTime() {
   }
 }
 
+// ===== かんたんモード =====
+let simpleActive = false;
+
+function simpleTime() {
+  if (simpleActive || quizActive) return;
+  simpleActive = true;
+
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const { period, h12 } = ampm(h);
+
+  // 時計を止めて秒針を隠す
+  clockPaused = true;
+  document.getElementById('secondHand').style.display = 'none';
+
+  // 時間のセクターをハイライト
+  drawExplainArc('hour', h12);
+
+  // 時間の数字をパルス
+  highlightNumber('hour', h12);
+
+  // 吹き出しに answer-pop で表示
+  document.getElementById('speechBubble').innerHTML =
+    `🕐 <span class="answer-pop">${period}</span> <span class="answer-pop" style="animation-delay:0.8s">${h12}じ</span> <span class="answer-pop" style="animation-delay:1.6s">${m}ふん</span>`;
+
+  // 読み上げ
+  const text = `${period}、${h12}じ、${m}ふんです！`;
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'ja-JP';
+    utter.rate = 0.82;
+    utter.pitch = 1.3;
+    utter.onend = finishSimple;
+    window.speechSynthesis.speak(utter);
+  } else {
+    setTimeout(finishSimple, 3000);
+  }
+}
+
+function finishSimple() {
+  clearExplainCanvas();
+  document.querySelectorAll('.number-pop').forEach(el => el.classList.remove('number-pop'));
+  document.getElementById('secondHand').style.display = '';
+  clockPaused = false;
+  simpleActive = false;
+  document.getElementById('speechBubble').textContent = '🌸 ボタンをおしてみてね！';
+}
+
 // ===== アラーム =====
 let alarmHour = null, alarmMin = null, alarmSec = null, alarmFired = false;
 let alarmInterval = null;
@@ -737,6 +800,9 @@ function quizTime(difficulty) {
   document.getElementById('hourHand').style.transform = `rotate(${hourDeg}deg)`;
   document.getElementById('minuteHand').style.transform = `rotate(${minDeg}deg)`;
   document.getElementById('secondHand').style.transform = `rotate(${secDeg}deg)`;
+
+  // やさしい・ふつうは秒針を隠す
+  document.getElementById('secondHand').style.display = difficulty === 'hard' ? '' : 'none';
 
   // 難易度に応じた出題テキスト
   let bubbleText, speechText;
@@ -859,6 +925,7 @@ function finishQuiz() {
   document.getElementById('hourHand').style.transition = '';
   document.getElementById('minuteHand').style.transition = '';
   document.getElementById('secondHand').style.transition = '';
+  document.getElementById('secondHand').style.display = '';
   clockPaused = false;
   quizActive = false;
   document.querySelectorAll('.quiz-btn').forEach(b => b.style.opacity = '');
