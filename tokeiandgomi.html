@@ -18,11 +18,49 @@ body{background:linear-gradient(135deg,#fde8f0 0%,#fce4ec 40%,#f8bbd0 100%);min-
 /* 全体ラッパー */
 #mainContent{display:none;flex-direction:column;align-items:center;gap:20px;width:100%}
 
-/* 上部: 横並びレイアウト */
-.top-row{display:flex;align-items:center;gap:24px;width:100%}
-.clock-panel{flex:0 0 auto;display:flex;flex-direction:column;align-items:center}
+/* レイアウト切替ボタン */
+.layout-switcher{display:flex;gap:8px;margin-bottom:8px}
+.layout-switcher button{background:rgba(255,255,255,0.6);border:2px solid var(--pink-light);border-radius:12px;padding:6px 16px;font-size:0.85rem;font-weight:800;font-family:inherit;color:var(--pink-dark);cursor:pointer;transition:all 0.15s}
+.layout-switcher button.active{background:var(--pink);color:#fff;border-color:var(--pink)}
+
+/* 共通 */
+.top-row{width:100%}
+.clock-panel{display:flex;flex-direction:column;align-items:center}
 .clock-panel h1{font-size:1.8rem;color:var(--pink-dark);margin-bottom:12px;letter-spacing:2px;text-shadow:0 2px 4px rgba(192,66,122,0.2)}
-.info-panel{flex:1;display:flex;flex-direction:column;gap:16px}
+.info-panel{display:flex;flex-direction:column;gap:16px}
+
+/* === A: 横並び・右パネル大 === */
+.layout-a .top-row{display:flex;align-items:center;gap:24px}
+.layout-a .clock-panel{flex:0 0 auto}
+.layout-a .info-panel{flex:1}
+.layout-a .date-text .main-date{font-size:3rem}
+.layout-a .date-text .year{font-size:1.2rem}
+.layout-a .garbage-label{font-size:1.3rem}
+.layout-a .garbage-icon .emoji{font-size:4rem}
+.layout-a .garbage-text{font-size:1.4rem}
+.layout-a .moon-box{width:72px;height:72px}
+
+/* === B: 上下2段 === */
+.layout-b .top-row{display:flex;flex-direction:column;align-items:center;gap:16px}
+.layout-b .info-panel{flex-direction:row;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center;width:100%}
+.layout-b .date-section{flex:1;min-width:250px}
+.layout-b .garbage-section{flex:1;min-width:250px}
+.layout-b .date-text .main-date{font-size:2.4rem}
+.layout-b .garbage-icon .emoji{font-size:3.5rem}
+.layout-b .garbage-text{font-size:1.2rem}
+
+/* === C: 横並び・ボード風 === */
+.layout-c .top-row{display:flex;align-items:stretch;gap:20px}
+.layout-c .clock-panel{flex:0 0 auto}
+.layout-c .info-panel{flex:1;background:rgba(255,255,255,0.5);border-radius:24px;padding:20px;box-shadow:0 4px 20px rgba(192,66,122,0.12)}
+.layout-c .date-section{background:none;box-shadow:none;padding:8px 0;border-bottom:2px solid var(--pink-light)}
+.layout-c .garbage-section{background:none;box-shadow:none;padding:12px 0}
+.layout-c .date-text .main-date{font-size:2.6rem}
+.layout-c .date-text .year{font-size:1.1rem}
+.layout-c .garbage-label{font-size:1.2rem}
+.layout-c .garbage-icon .emoji{font-size:3.5rem}
+.layout-c .garbage-text{font-size:1.3rem}
+.layout-c .moon-box{width:64px;height:64px}
 
 /* 時計 */
 .clock-wrapper{position:relative;width:min(80vmin,560px);height:min(80vmin,560px)}
@@ -108,8 +146,15 @@ canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-rad
 </head>
 <body>
 
+<!-- レイアウト切替 -->
+<div class="layout-switcher">
+  <button class="active" onclick="setLayout('a')">A 横・大</button>
+  <button onclick="setLayout('b')">B 上下</button>
+  <button onclick="setLayout('c')">C ボード</button>
+</div>
+
 <!-- メインコンテンツ -->
-<div id="mainContent" style="display:flex">
+<div id="mainContent" class="layout-a" style="display:flex">
   <!-- 上部: 時計 + 情報パネル -->
   <div class="top-row">
     <div class="clock-panel">
@@ -175,6 +220,15 @@ canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-rad
 </div>
 
 <script>
+function setLayout(id){
+  const mc=document.getElementById('mainContent');
+  mc.classList.remove('layout-a','layout-b','layout-c');
+  mc.classList.add('layout-'+id);
+  document.querySelectorAll('.layout-switcher button').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.layout-switcher button[onclick="setLayout('${id}')"]`).classList.add('active');
+  setTimeout(()=>{drawSectors();placeNumbers();},50);
+}
+
 window.addEventListener('load', function(){ setTimeout(initApp, 100); });
 
 // ===== セクターカラー =====
