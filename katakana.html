@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>ひらがなひょう</title>
+<title>カタカナひょう</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{
-  background:linear-gradient(180deg,#FFF9C4,#FFF3E0);
+  background:linear-gradient(180deg,#E3F2FD,#E8EAF6);
   font-family:'Zen Maru Gothic','Hiragino Kaku Gothic Pro',sans-serif;
   display:flex;align-items:center;justify-content:center;
   min-height:100vh;min-height:100dvh;padding:6px;
@@ -33,24 +33,24 @@ body{
   width:100%;cursor:pointer;transition:background .15s;
 }
 .h-area{flex:3;position:relative}
-.h-area:active{background:#FFF9C4}
+.h-area:active{background:#E3F2FD}
 .w-area{flex:2;border-top:1px dashed #e0e0e0}
 .w-area:active{background:#E8F5E9}
 .h-char{font-size:clamp(20px,5.5vw,64px);font-weight:700;color:#333;line-height:1}
 .k-char{position:absolute;bottom:1px;right:3px;font-size:clamp(7px,1.2vw,13px);color:#aaa;font-weight:500}
 .emoji{font-size:clamp(14px,3vw,36px);line-height:1.1}
 .word{font-size:clamp(6px,1.1vw,13px);color:#666;line-height:1.2;margin-top:1px;text-align:center}
-.cell.hl{box-shadow:0 0 0 3px #FF6F00;z-index:1}
+.cell.hl{box-shadow:0 0 0 3px #1565C0;z-index:1}
 /* Special cells */
 .cell.sp{cursor:pointer;justify-content:center;border-style:dashed}
 .cell.sp:active{transform:scale(.95)}
 .sp-icon{font-size:clamp(18px,4vw,44px);line-height:1}
 .sp-label{font-size:clamp(7px,1.2vw,14px);color:#555;margin-top:2px;text-align:center;font-weight:700}
-.sp-title{background:linear-gradient(135deg,#FFF9C4,#FFE0B2);border-color:#FFB74D!important}
-.sp-title .sp-icon{color:#E65100;font-weight:700;font-size:clamp(13px,2.5vw,28px)}
-.sp-switch{background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-color:#66BB6A!important}
-.sp-switch .sp-label{color:#2E7D32}
-.sp-random{background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-color:#42A5F5!important}
+.sp-title{background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-color:#42A5F5!important}
+.sp-title .sp-icon{color:#1565C0;font-weight:700;font-size:clamp(13px,2.5vw,28px)}
+.sp-switch{background:linear-gradient(135deg,#FFF9C4,#FFE0B2);border-color:#FFB74D!important}
+.sp-switch .sp-label{color:#E65100}
+.sp-random{background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-color:#66BB6A!important}
 .sp-readall{background:linear-gradient(135deg,#FCE4EC,#F8BBD0);border-color:#EC407A!important}
 .sp-readall.active{animation:glow 1s infinite alternate}
 @keyframes glow{from{box-shadow:0 0 4px #EC407A}to{box-shadow:0 0 14px #EC407A}}
@@ -64,13 +64,13 @@ body{
 <script>
 const C=['#BDBDBD','#64B5F6','#43A047','#AED581','#F06292','#FF8A65','#FFD54F','#FFB74D','#CE93D8','#81C784'];
 const G=[
-[['わ','ワ','わに','🐊'],['ら','ラ','らいおん','🦁'],['や','ヤ','やま','⛰️'],['ま','マ','まくら','🛏️'],['は','ハ','はな','🌻'],['な','ナ','なす','🍆'],['た','タ','たこ','🐙'],['さ','サ','さくら','🌸'],['か','カ','かめ','🐢'],['あ','ア','あめ','🍬']],
-['T',['り','リ','りんご','🍎'],'R',['み','ミ','みかん','🍊'],['ひ','ヒ','ひこうき','✈️'],['に','ニ','にんじん','🥕'],['ち','チ','ちゅーりっぷ','🌷'],['し','シ','しんかんせん','🚅'],['き','キ','きのこ','🍄'],['い','イ','いるか','🐬']],
-[['を','ヲ','',''],['る','ル','るーぺ','🔍'],['ゆ','ユ','ゆきだるま','⛄'],['む','ム','むし','🐛'],['ふ','フ','ふうせん','🎈'],['ぬ','ヌ','ぬいぐるみ','🧸'],['つ','ツ','つみき','🧱'],['す','ス','すいか','🍉'],['く','ク','くま','🐻'],['う','ウ','うさぎ','🐰']],
-['S',['れ','レ','れもん','🍋'],'A',['め','メ','めだか','🐟'],['へ','ヘ','へりこぷたー','🚁'],['ね','ネ','ねこ','🐱'],['て','テ','てんとうむし','🐞'],['せ','セ','せみ','🦗'],['け','ケ','けーき','🎂'],['え','エ','えび','🦐']],
-[['ん','ン','',''],['ろ','ロ','ろけっと','🚀'],['よ','ヨ','よっと','⛵'],['も','モ','もも','🍑'],['ほ','ホ','ほし','⭐'],['の','ノ','のりもの','🚌'],['と','ト','とり','🐦'],['そ','ソ','そら','☁️'],['こ','コ','こま','🪀'],['お','オ','おにぎり','🍙']]
+[['ワ','わ','ワッフル','🧇'],['ラ','ら','ラッパ','🎺'],['ヤ','や','ヤシ','🌴'],['マ','ま','マイク','🎤'],['ハ','は','ハンバーガー','🍔'],['ナ','な','ナッツ','🥜'],['タ','た','タクシー','🚕'],['サ','さ','サンタ','🎅'],['カ','か','カメラ','📷'],['ア','あ','アイス','🍨']],
+['T',['リ','り','リボン','🎀'],'R',['ミ','み','ミルク','🥛'],['ヒ','ひ','ヒーロー','🦸'],['ニ','に','ニンジャ','🥷'],['チ','ち','チーズ','🧀'],['シ','し','シャワー','🚿'],['キ','き','キャンディー','🍬'],['イ','い','インコ','🦜']],
+[['ヲ','を','',''],['ル','る','ルーペ','🔍'],['ユ','ゆ','ユニコーン','🦄'],['ム','む','ムース','🍮'],['フ','ふ','フライパン','🍳'],['ヌ','ぬ','ヌードル','🍜'],['ツ','つ','ツリー','🎄'],['ス','す','スプーン','🥄'],['ク','く','クレヨン','🖍️'],['ウ','う','ウインナー','🌭']],
+['S',['レ','れ','レモン','🍋'],'A',['メ','め','メロン','🍈'],['ヘ','へ','ヘリコプター','🚁'],['ネ','ね','ネクタイ','👔'],['テ','て','テレビ','📺'],['セ','せ','セーター','🧥'],['ケ','け','ケーキ','🎂'],['エ','え','エプロン','👩‍🍳']],
+[['ン','ん','',''],['ロ','ろ','ロボット','🤖'],['ヨ','よ','ヨット','⛵'],['モ','も','モノレール','🚝'],['ホ','ほ','ホットケーキ','🥞'],['ノ','の','ノート','📓'],['ト','と','トラック','🚚'],['ソ','そ','ソフトクリーム','🍦'],['コ','こ','コアラ','🐨'],['オ','お','オレンジ','🍊']]
 ];
-const RO='あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん'.split('');
+const RO='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'.split('');
 const CM={};
 let raActive=false,raTimer=null;
 const grid=document.getElementById('grid');
@@ -82,16 +82,16 @@ G.forEach(row=>{
       el.className='cell sp';
       if(d==='T'){
         el.classList.add('sp-title');
-        el.innerHTML='<span class="sp-icon">ひらがな</span>';
-        el.onclick=()=>{stopRA();speak('ひらがなひょう')};
+        el.innerHTML='<span class="sp-icon">カタカナ</span>';
+        el.onclick=()=>{stopRA();speak('カタカナひょう')};
       }else if(d==='R'){
         el.classList.add('sp-random');
         el.innerHTML='<span class="sp-icon">🎲</span><span class="sp-label">ランダム</span>';
         el.onclick=doRandom;
       }else if(d==='S'){
         el.classList.add('sp-switch');
-        el.innerHTML='<span class="sp-icon">カタカナ</span><span class="sp-label">→きりかえ</span>';
-        el.onclick=()=>location.href='katakana.html';
+        el.innerHTML='<span class="sp-icon">ひらがな</span><span class="sp-label">→きりかえ</span>';
+        el.onclick=()=>location.href='hiragana.html';
       }else if(d==='A'){
         el.id='ra-btn';
         el.classList.add('sp-readall');
@@ -120,7 +120,6 @@ G.forEach(row=>{
   });
 });
 
-// 音声
 let jpVoice=null;
 function loadVoices(){
   const v=speechSynthesis.getVoices();
