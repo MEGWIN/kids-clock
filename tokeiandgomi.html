@@ -143,6 +143,7 @@ canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-rad
         <div class="garbage-text" id="garbageText"></div>
         <div class="next-day-note" id="nextDayNote"></div>
       </div>
+      <button class="speak-btn" onclick="speakTime()" style="margin-top:12px;">いまなんじ？</button>
     </div>
   </div>
 
@@ -150,7 +151,6 @@ canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-rad
   <div class="controls">
     <div class="speech-bubble" id="speechBubble"></div>
     <div class="btn-row">
-      <button class="speak-btn" onclick="speakTime()">いまなんじ？</button>
       <button class="quiz-btn quiz-easy" onclick="quizTime('easy')">やさしい</button>
       <button class="quiz-btn" onclick="quizTime('normal')">ふつう</button>
       <button class="quiz-btn quiz-hard" onclick="quizTime('hard')">むずかしい</button>
