@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ひらがなひょう</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:linear-gradient(180deg,#FFF9C4 0%,#FFF3E0 100%);
+  font-family:'Zen Maru Gothic','Hiragino Kaku Gothic Pro','Yu Gothic',sans-serif;
+  min-height:100vh;
+  padding:8px;
+}
+.header{
+  text-align:center;
+  padding:8px 0;
+}
+.header h1{
+  font-size:clamp(20px,4vw,36px);
+  color:#E65100;
+  letter-spacing:0.1em;
+}
+.circles{
+  display:flex;justify-content:center;gap:6px;margin-bottom:6px;
+}
+.circles span{
+  width:clamp(16px,3vw,28px);height:clamp(16px,3vw,28px);
+  border-radius:50%;display:inline-block;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(10,1fr);
+  gap:clamp(2px,0.5vw,5px);
+  max-width:1100px;
+  margin:0 auto;
+}
+.cell{
+  border:3px solid;
+  border-radius:clamp(4px,1vw,10px);
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  overflow:hidden;
+  aspect-ratio:5/7;
+  touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+}
+.cell.empty{border:none;background:transparent}
+.h-area,.w-area{
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  width:100%;cursor:pointer;
+  transition:background 0.15s;
+}
+.h-area{flex:3;position:relative}
+.h-area:active{background:#FFF9C4}
+.w-area{flex:2;border-top:1px dashed #e0e0e0}
+.w-area:active{background:#E8F5E9}
+.h-char{
+  font-size:clamp(20px,5.5vw,64px);
+  font-weight:700;color:#333;
+  line-height:1;
+}
+.k-char{
+  position:absolute;bottom:1px;right:3px;
+  font-size:clamp(7px,1.3vw,14px);
+  color:#aaa;font-weight:400;
+}
+.emoji{font-size:clamp(14px,3vw,36px);line-height:1.1}
+.word{
+  font-size:clamp(7px,1.2vw,13px);
+  color:#666;line-height:1.2;
+  margin-top:1px;
+}
+.cell.speaking-h .h-area{background:#FFF9C4}
+.cell.speaking-w .w-area{background:#E8F5E9}
+@keyframes pop{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.08)}
+  100%{transform:scale(1)}
+}
+.cell.pop{animation:pop 0.25s ease}
+
+/* 横向きモバイル・タブレット調整 */
+@media(max-width:600px){
+  .cell{aspect-ratio:4/6;border-width:2px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="circles" id="deco"></div>
+  <h1>ひらがなひょう</h1>
+</div>
+<div class="grid" id="grid"></div>
+
+<script>
+// カラム色: わ行→あ行 (左→右)
+const C=['#BDBDBD','#64B5F6','#43A047','#AED581','#F06292','#FF8A65','#FFD54F','#FFB74D','#CE93D8','#81C784'];
+
+// グリッドデータ: [ひらがな, カタカナ, ことば, 絵文字] or null
+const G=[
+ // あ段
+ [['わ','ワ','わに','🐊'],['ら','ラ','らいおん','🦁'],['や','ヤ','やま','⛰️'],['ま','マ','まくら','🛏️'],['は','ハ','はな','🌻'],['な','ナ','なす','🍆'],['た','タ','たこ','🐙'],['さ','サ','さくら','🌸'],['か','カ','かめ','🐢'],['あ','ア','あめ','🍬']],
+ // い段
+ [null,['り','リ','りんご','🍎'],null,['み','ミ','みかん','🍊'],['ひ','ヒ','ひこうき','✈️'],['に','ニ','にんじん','🥕'],['ち','チ','ちゅーりっぷ','🌷'],['し','シ','しんかんせん','🚅'],['き','キ','きのこ','🍄'],['い','イ','いるか','🐬']],
+ // う段
+ [['を','ヲ','',''],['る','ル','るーぺ','🔍'],['ゆ','ユ','ゆきだるま','⛄'],['む','ム','むし','🐛'],['ふ','フ','ふうせん','🎈'],['ぬ','ヌ','ぬいぐるみ','🧸'],['つ','ツ','つみき','🧱'],['す','ス','すいか','🍉'],['く','ク','くま','🐻'],['う','ウ','うさぎ','🐰']],
+ // え段
+ [null,['れ','レ','れもん','🍋'],null,['め','メ','めだか','🐟'],['へ','ヘ','へりこぷたー','🚁'],['ね','ネ','ねこ','🐱'],['て','テ','てんとうむし','🐞'],['せ','セ','せみ','🦗'],['け','ケ','けーき','🎂'],['え','エ','えび','🦐']],
+ // お段
+ [['ん','ン','',''],['ろ','ロ','ろけっと','🚀'],['よ','ヨ','よっと','⛵'],['も','モ','もも','🍑'],['ほ','ホ','ほし','⭐'],['の','ノ','のりもの','🚌'],['と','ト','とり','🐦'],['そ','ソ','そら','☁️'],['こ','コ','こま','🪀'],['お','オ','おにぎり','🍙']]
+];
+
+// デコ丸を生成
+const deco=document.getElementById('deco');
+C.forEach(c=>{const s=document.createElement('span');s.style.background=c;deco.appendChild(s)});
+
+// グリッド描画
+const grid=document.getElementById('grid');
+G.forEach((row)=>{
+  row.forEach((d,ci)=>{
+    const el=document.createElement('div');
+    el.className='cell'+(d?'':' empty');
+    if(!d){grid.appendChild(el);return}
+    const[h,k,word,emoji]=d;
+    el.style.borderColor=C[ci];
+
+    // ひらがなエリア
+    const ha=document.createElement('div');
+    ha.className='h-area';
+    ha.innerHTML='<span class="h-char">'+h+'</span><span class="k-char">'+k+'</span>';
+    ha.onclick=()=>{speak(h);flash(el,'speaking-h')};
+    el.appendChild(ha);
+
+    // ことばエリア（ことばがある場合のみ）
+    if(word){
+      const wa=document.createElement('div');
+      wa.className='w-area';
+      wa.innerHTML='<span class="emoji">'+emoji+'</span><span class="word">'+word+'</span>';
+      wa.onclick=()=>{speak(word);flash(el,'speaking-w')};
+      el.appendChild(wa);
+    } else {
+      ha.style.flex='1';
+    }
+    grid.appendChild(el);
+  });
+});
+
+// 音声
+let jpVoice=null;
+function loadVoices(){
+  const v=speechSynthesis.getVoices();
+  jpVoice=v.find(x=>x.lang==='ja-JP')||v.find(x=>x.lang.startsWith('ja'));
+}
+speechSynthesis.onvoiceschanged=loadVoices;
+loadVoices();
+
+function speak(text){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='ja-JP';
+  u.rate=0.85;
+  u.pitch=1.1;
+  if(jpVoice)u.voice=jpVoice;
+  speechSynthesis.speak(u);
+}
+
+function flash(el,cls){
+  el.classList.remove('pop',cls);
+  void el.offsetWidth;
+  el.classList.add('pop',cls);
+  setTimeout(()=>el.classList.remove(cls),600);
+}
+</script>
+</body>
+</html>
