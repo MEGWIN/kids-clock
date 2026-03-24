@@ -272,6 +272,30 @@
     transform: translateY(1px);
     box-shadow: 0 2px 8px rgba(67,160,71,0.4);
   }
+  .guriguri-btn {
+    background: linear-gradient(135deg, #ab47bc, #8e24aa);
+    box-shadow: 0 4px 16px rgba(142,36,170,0.4), 0 2px 4px rgba(0,0,0,0.1);
+    padding: 14px 20px;
+    font-size: 1rem;
+  }
+  .guriguri-btn:hover {
+    box-shadow: 0 6px 20px rgba(142,36,170,0.5);
+  }
+  .guriguri-btn:active {
+    box-shadow: 0 2px 8px rgba(142,36,170,0.4);
+  }
+  .guriguri-btn.active {
+    background: linear-gradient(135deg, #ce93d8, #ab47bc);
+    box-shadow: 0 0 20px rgba(142,36,170,0.6), 0 4px 16px rgba(142,36,170,0.4);
+  }
+
+  .clock-face.guriguri-cursor {
+    cursor: grab;
+  }
+  .clock-face.guriguri-cursor:active {
+    cursor: grabbing;
+  }
+
   .quiz-easy {
     background: linear-gradient(135deg, #aed581, #8bc34a);
     box-shadow: 0 4px 16px rgba(139,195,74,0.4), 0 2px 4px rgba(0,0,0,0.1);
@@ -458,6 +482,10 @@
     <button class="quiz-btn quiz-hard" onclick="quizTime('hard')">🔥 むずかしい</button>
   </div>
 
+  <div class="btn-row">
+    <button class="speak-btn guriguri-btn" onclick="toggleGuriguri()">🌀 ぐりぐり</button>
+  </div>
+
   <div class="alarm-area">
     <div class="alarm-title">⏰ アラームをセットする</div>
     <div class="alarm-row">
@@ -614,6 +642,7 @@ function ampm(h24) {
 
 // ===== 読み上げ（止めて→しゃべって→再開）=====
 function speakTime() {
+  if (guriguriActive) toggleGuriguri(); // ぐりぐり解除
   const now = new Date();
   const h = now.getHours();
   const m = now.getMinutes();
@@ -654,6 +683,7 @@ let simpleActive = false;
 
 function simpleTime() {
   if (quizActive) return;
+  if (guriguriActive && !simpleActive) toggleGuriguri(); // ぐりぐり解除
 
   if (simpleActive) {
     // トグルOFF
@@ -783,6 +813,7 @@ let quizTimer = null;
 
 function quizTime(difficulty) {
   if (quizActive) return;
+  if (guriguriActive) toggleGuriguri(); // ぐりぐり解除
   quizActive = true;
   document.querySelectorAll('.quiz-btn').forEach(b => b.style.opacity = '0.5');
 
@@ -1012,6 +1043,128 @@ function clearExplainCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+// ===== ぐりぐりモード =====
+let guriguriActive = false;
+let isDragging = false;
+let prevAngle = 0;
+let guriguriMinDeg = 0;  // 分針の累積角度
+let guriguriHourBase = 0; // ぐりぐり開始時の短針角度
+
+function toggleGuriguri() {
+  if (quizActive) return;
+  if (simpleActive) { simpleTime(); } // かんたんモードOFF
+
+  if (guriguriActive) {
+    // OFF → 現在時刻に戻す
+    guriguriActive = false;
+    clockPaused = false;
+    document.getElementById('clockFace').classList.remove('guriguri-cursor');
+    document.querySelector('.guriguri-btn').classList.remove('active');
+    document.getElementById('secondHand').style.display = '';
+    document.getElementById('digitalClock').style.display = 'none';
+    document.getElementById('speechBubble').textContent = '🌸 ボタンをおしてみてね！';
+    return;
+  }
+
+  // ON
+  guriguriActive = true;
+  clockPaused = true;
+  document.getElementById('clockFace').classList.add('guriguri-cursor');
+  document.querySelector('.guriguri-btn').classList.add('active');
+  document.getElementById('secondHand').style.display = 'none';
+  document.getElementById('digitalClock').style.display = 'block';
+
+  // 現在の針の位置を初期値にする
+  const now = new Date();
+  const h = now.getHours() % 12;
+  const m = now.getMinutes();
+  guriguriMinDeg = (m / 60) * 360;
+  guriguriHourBase = (h / 12) * 360;
+
+  updateGuriguriDisplay();
+  document.getElementById('speechBubble').textContent = '🌀 とけいをぐりぐりまわしてみよう！';
+}
+
+function getAngleFromCenter(e) {
+  const face = document.getElementById('clockFace');
+  const rect = face.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const x = (e.clientX || e.touches[0].clientX) - cx;
+  const y = (e.clientY || e.touches[0].clientY) - cy;
+  return Math.atan2(y, x) * (180 / Math.PI) + 90; // 12時方向が0°
+}
+
+function normalizeAngle(a) {
+  return ((a % 360) + 360) % 360;
+}
+
+function onDragStart(e) {
+  if (!guriguriActive) return;
+  isDragging = true;
+  prevAngle = normalizeAngle(getAngleFromCenter(e));
+  e.preventDefault();
+}
+
+function onDragMove(e) {
+  if (!isDragging) return;
+  const currAngle = normalizeAngle(getAngleFromCenter(e));
+  let delta = currAngle - prevAngle;
+
+  // 360°/0°をまたぐときの補正
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+
+  guriguriMinDeg += delta;
+  prevAngle = currAngle;
+
+  updateGuriguriDisplay();
+  e.preventDefault();
+}
+
+function onDragEnd() {
+  if (!isDragging) return;
+  isDragging = false;
+
+  // 離したとき音声で読み上げ
+  const { h, m } = getGuriguriTime();
+  const h12 = h || 12;
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(`${h12}じ、${m}ふん`);
+    u.lang = 'ja-JP'; u.rate = 0.85; u.pitch = 1.3;
+    window.speechSynthesis.speak(u);
+  }
+}
+
+function getGuriguriTime() {
+  const normMin = normalizeAngle(guriguriMinDeg);
+  const m = Math.round((normMin / 360) * 60) % 60;
+
+  // 短針: 基準 + 分針の累積回転 / 12
+  const hourDeg = normalizeAngle(guriguriHourBase + guriguriMinDeg / 12);
+  const h = Math.floor((hourDeg / 360) * 12);
+
+  return { h, m };
+}
+
+function updateGuriguriDisplay() {
+  const normMin = normalizeAngle(guriguriMinDeg);
+  const hourDeg = normalizeAngle(guriguriHourBase + guriguriMinDeg / 12);
+
+  document.getElementById('minuteHand').style.transform = `rotate(${normMin}deg)`;
+  document.getElementById('hourHand').style.transform = `rotate(${hourDeg}deg)`;
+
+  const { h, m } = getGuriguriTime();
+  const h12 = h || 12;
+  const { period } = ampm(h);
+  const mm = String(m).padStart(2, '0');
+  document.getElementById('digitalClock').innerHTML =
+    `${period} <span style="color:#e53935">${h12}</span>:<span style="color:#1565c0">${mm}</span>`;
+  document.getElementById('speechBubble').innerHTML =
+    `🌀 ${period} <span style="color:#e53935;font-weight:800">${h12}じ</span> <span style="color:#1565c0;font-weight:800">${m}ふん</span>`;
+}
+
 // ===== 初期化 =====
 window.addEventListener('load', () => {
   drawSectors();
@@ -1019,6 +1172,13 @@ window.addEventListener('load', () => {
   buildSelects();
   updateClock();
   setInterval(updateClock, 1000);
+
+  // ぐりぐりイベント
+  const face = document.getElementById('clockFace');
+  face.addEventListener('pointerdown', onDragStart);
+  window.addEventListener('pointermove', onDragMove);
+  window.addEventListener('pointerup', onDragEnd);
+  face.style.touchAction = 'none'; // スマホでスクロール防止
 });
 
 window.addEventListener('resize', () => {
