@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/kids-clock.html" }
+    { "source": "/", "destination": "/kids-clock.html" },
+    { "source": "/gomi", "destination": "/tokeiandgomi.html" }
   ]
 }

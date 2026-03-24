@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>まりことけい＆ゴミカレンダー</title>
+<link href="https://fonts.googleapis.com/css2?family=Rounded+Mplus+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#e8609a;--pink-light:#f7b8d4;--pink-dark:#c0427a;--cream:#fff8f9}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(135deg,#fde8f0 0%,#fce4ec 40%,#f8bbd0 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'Rounded Mplus 1c','Hiragino Maru Gothic Pro',sans-serif;padding:16px}
+
+/* パスワード */
+#pwOverlay{position:fixed;inset:0;background:rgba(192,66,122,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#pwOverlay.hidden{display:none}
+#pwOverlay input{font-size:1.2rem;padding:10px 20px;border-radius:12px;border:2px solid #fff;text-align:center;font-family:inherit}
+#pwOverlay button{font-size:1.1rem;padding:10px 28px;border-radius:12px;border:none;background:#fff;color:var(--pink-dark);font-weight:800;cursor:pointer;font-family:inherit}
+#pwOverlay p{color:#fff;font-weight:700;font-size:1.1rem}
+#pwError{color:#ffeb3b;font-size:0.9rem;min-height:1.2em}
+
+/* メイン横長レイアウト */
+.main{display:flex;gap:24px;align-items:stretch;max-width:1100px;width:100%}
+.clock-panel{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.clock-panel h1{font-size:1.3rem;color:var(--pink-dark);margin-bottom:10px;letter-spacing:2px}
+.info-panel{flex:1;display:flex;flex-direction:column;gap:16px;justify-content:center}
+
+/* 時計 */
+.clock-wrapper{position:relative;width:300px;height:300px}
+.clock-outer{position:absolute;inset:0;border-radius:50%;background:linear-gradient(145deg,#e8609a,#c0427a);box-shadow:0 8px 32px rgba(192,66,122,0.45)}
+.clock-ring{position:absolute;inset:10px;border-radius:50%;background:linear-gradient(145deg,#e8e8e8,#b0b0b0,#d8d8d8);box-shadow:inset 0 2px 6px rgba(0,0,0,0.2)}
+.clock-face{position:absolute;inset:18px;border-radius:50%;background:#fff;overflow:hidden}
+canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:50%}
+.number span{position:absolute;font-weight:800;transform:translate(-50%,-50%);line-height:1}
+.hand{position:absolute;bottom:50%;left:50%;transform-origin:bottom center;border-radius:4px 4px 2px 2px}
+.hour-hand{width:7px;height:28%;background:linear-gradient(to top,#1565c0,#1e88e5);margin-left:-3.5px;z-index:10}
+.minute-hand{width:5px;height:38%;background:linear-gradient(to top,#c62828,#e53935);margin-left:-2.5px;z-index:11}
+.second-hand{width:3px;height:42%;background:linear-gradient(to top,#111,#333);margin-left:-1.5px;z-index:12}
+.center-dot{position:absolute;width:12px;height:12px;background:radial-gradient(circle,#aaa,#666);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+
+/* 日付セクション */
+.date-section{background:rgba(255,255,255,0.85);border-radius:20px;padding:16px 24px;box-shadow:0 3px 15px rgba(192,66,122,0.15);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.date-text{font-size:1.1rem;font-weight:800;color:#333}
+.date-text .year{font-size:0.95rem;color:#888}
+.date-text .main-date{font-size:2rem;color:var(--pink-dark)}
+.date-text .weekday{font-size:1.2rem;margin-left:8px}
+
+/* 月齢 */
+.moon-box{width:56px;height:56px;position:relative;flex-shrink:0}
+.moon-box canvas{width:100%;height:100%}
+
+/* ゴミセクション */
+.garbage-section{background:rgba(255,255,255,0.9);border-radius:20px;padding:20px 24px;box-shadow:0 3px 15px rgba(192,66,122,0.15)}
+.garbage-label{font-size:0.95rem;font-weight:800;color:var(--pink-dark);margin-bottom:10px}
+.garbage-icons{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.garbage-icon{display:flex;flex-direction:column;align-items:center;gap:4px;background:linear-gradient(135deg,#f5f5f5,#e8e8e8);border-radius:16px;padding:12px 16px;min-width:80px}
+.garbage-icon .emoji{font-size:2rem}
+.garbage-icon .name{font-size:0.75rem;font-weight:700;color:#555}
+.garbage-text{font-size:1.1rem;font-weight:800;color:#333}
+.garbage-none{color:#999;font-style:italic}
+.next-day-note{font-size:0.85rem;color:#888;margin-top:4px}
+
+/* デジタル時計表示 */
+.digital-time{font-size:1rem;font-weight:800;color:#555;text-align:center;margin-top:6px}
+
+/* レスポンシブ */
+@media(max-width:768px){
+  .main{flex-direction:column;align-items:center}
+  .clock-wrapper{width:240px;height:240px}
+  .info-panel{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- パスワード画面 -->
+<div id="pwOverlay">
+  <p>パスワードをいれてね</p>
+  <input type="password" id="pwInput" placeholder="パスワード" autofocus>
+  <button onclick="checkPw()">はいる</button>
+  <div id="pwError"></div>
+</div>
+
+<!-- メインコンテンツ -->
+<div class="main" id="mainContent" style="display:none">
+  <!-- 左: 時計 -->
+  <div class="clock-panel">
+    <h1>まりことけい</h1>
+    <div class="clock-wrapper">
+      <div class="clock-outer"></div>
+      <div class="clock-ring"></div>
+      <div class="clock-face" id="clockFace">
+        <canvas class="sector-canvas" id="sectorCanvas"></canvas>
+        <div id="numbersLayer"></div>
+        <div class="hand hour-hand" id="hourHand"></div>
+        <div class="hand minute-hand" id="minuteHand"></div>
+        <div class="hand second-hand" id="secondHand"></div>
+        <div class="center-dot"></div>
+      </div>
+    </div>
+    <div class="digital-time" id="digitalTime"></div>
+  </div>
+
+  <!-- 右: 情報パネル -->
+  <div class="info-panel">
+    <div class="date-section">
+      <div class="date-text">
+        <div class="year" id="dateYear"></div>
+        <div class="main-date" id="dateMain"></div>
+      </div>
+      <div class="moon-box"><canvas id="moonCanvas" width="112" height="112"></canvas></div>
+    </div>
+    <div class="garbage-section">
+      <div class="garbage-label" id="garbageLabel"></div>
+      <div class="garbage-icons" id="garbageIcons"></div>
+      <div class="garbage-text" id="garbageText"></div>
+      <div class="next-day-note" id="nextDayNote"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== パスワード =====
+const PW_HASH = 'mariko';
+
+function showMain(){
+  document.getElementById('pwOverlay').classList.add('hidden');
+  document.getElementById('mainContent').style.display = 'flex';
+  // レイアウト確定を待ってから初期化
+  setTimeout(initApp, 100);
+}
+
+function checkPw(){
+  const v = document.getElementById('pwInput').value;
+  if(v === PW_HASH){
+    localStorage.setItem('tg_auth','1');
+    showMain();
+  } else {
+    document.getElementById('pwError').textContent = 'ちがうよ！もういちど いれてね';
+  }
+}
+
+document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPw(); });
+
+// 認証済みなら即表示
+if(localStorage.getItem('tg_auth')==='1'){
+  document.getElementById('pwOverlay').classList.add('hidden');
+  document.getElementById('mainContent').style.display = 'flex';
+}
+// ページ読み込み完了後に初期化
+window.addEventListener('load', function(){
+  if(localStorage.getItem('tg_auth')==='1'){
+    setTimeout(initApp, 100);
+  }
+});
+
+// ===== 時計描画 =====
+const sectorColors = ['#ffeb3b','#ff9800','#f44336','#e91e63','#9c27b0','#3f51b5','#2196f3','#00bcd4','#009688','#4caf50','#8bc34a','#cddc39'];
+
+function drawSectors(){
+  const c = document.getElementById('sectorCanvas');
+  const s = c.parentElement.offsetWidth; c.width=s; c.height=s;
+  const ctx=c.getContext('2d'), cx=s/2, cy=s/2, r=s/2;
+  for(let i=0;i<12;i++){
+    const a1=(i/12)*Math.PI*2-Math.PI/2, a2=((i+1)/12)*Math.PI*2-Math.PI/2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,a1,a2); ctx.closePath();
+    ctx.fillStyle=sectorColors[i]+'66'; ctx.fill();
+  }
+  ctx.beginPath(); ctx.arc(cx,cy,r*0.58,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill();
+}
+
+function placeNumbers(){
+  const layer=document.getElementById('numbersLayer'); layer.innerHTML='';
+  const s=document.getElementById('clockFace').offsetWidth, cx=s/2, cy=s/2;
+  for(let i=1;i<=12;i++){
+    const a=(i/12)*Math.PI*2-Math.PI/2, rd=s*0.4;
+    const sp=document.createElement('span');
+    sp.textContent=i; sp.style.cssText=`left:${cx+Math.cos(a)*rd}px;top:${cy+Math.sin(a)*rd}px;position:absolute;font-size:${s*0.075}px;font-weight:800;color:#1565c0;transform:translate(-50%,-50%)`;
+    layer.appendChild(sp);
+  }
+  for(let i=1;i<=60;i++){
+    const a=(i/60)*Math.PI*2-Math.PI/2, rd=s*0.455;
+    const sp=document.createElement('span');
+    sp.textContent=i===60?'0':i;
+    sp.style.cssText=`left:${cx+Math.cos(a)*rd}px;top:${cy+Math.sin(a)*rd}px;position:absolute;font-size:${s*0.028}px;font-weight:700;color:#e53935;transform:translate(-50%,-50%);line-height:1`;
+    layer.appendChild(sp);
+  }
+}
+
+function updateClock(){
+  const now=new Date(), h=now.getHours()%12, m=now.getMinutes(), s=now.getSeconds();
+  document.getElementById('hourHand').style.transform=`rotate(${h/12*360+m/60*30}deg)`;
+  document.getElementById('minuteHand').style.transform=`rotate(${m/60*360}deg)`;
+  document.getElementById('secondHand').style.transform=`rotate(${s/60*360}deg)`;
+  const p=now.getHours()<12?'ごぜん':'ごご', h12=h||12;
+  document.getElementById('digitalTime').innerHTML=`${p} ${h12}じ ${String(m).padStart(2,'0')}ふん ${String(s).padStart(2,'0')}びょう`;
+}
+
+// ===== 日付表示 =====
+const WEEKDAYS = ['にちようび','げつようび','かようび','すいようび','もくようび','きんようび','どようび'];
+const WEEKDAY_SHORT = ['日','月','火','水','木','金','土'];
+
+function updateDate(){
+  const now=new Date(), y=now.getFullYear(), mo=now.getMonth()+1, d=now.getDate(), dow=now.getDay();
+  const reiwa = y - 2018;
+  document.getElementById('dateYear').textContent=`${y}年（令和${reiwa}年）`;
+  document.getElementById('dateMain').innerHTML=`${mo}月${d}日 <span class="weekday" style="color:${dow===0?'#e53935':dow===6?'#1565c0':'#333'}">(${WEEKDAY_SHORT[dow]})</span>`;
+}
+
+// ===== 月齢 =====
+function getMoonAge(date){
+  const known = new Date(2000, 0, 6, 18, 14); // 2000/1/6 18:14 UTC 新月
+  const diff = (date.getTime() - known.getTime()) / 86400000;
+  return ((diff % 29.53058770576) + 29.53058770576) % 29.53058770576;
+}
+
+function drawMoon(date){
+  const age = getMoonAge(date);
+  const c = document.getElementById('moonCanvas');
+  const ctx = c.getContext('2d');
+  const w=c.width, h=c.height, cx=w/2, cy=h/2, r=w/2-4;
+  ctx.clearRect(0,0,w,h);
+
+  // 背景(暗)
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle='#1a1a2e'; ctx.fill();
+
+  // 明るい部分を描画
+  const phase = age / 29.53058770576; // 0-1
+  ctx.beginPath();
+  // 右半分 or 左半分の弧
+  if(phase < 0.5){
+    // 新月→満月: 右から明るくなる
+    ctx.arc(cx,cy,r, -Math.PI/2, Math.PI/2, false); // 右半円
+    const k = Math.cos(phase * 2 * Math.PI);
+    ctx.ellipse(cx,cy, Math.abs(k)*r, r, 0, Math.PI/2, -Math.PI/2, k>0);
+  } else {
+    // 満月→新月: 左から暗くなる
+    ctx.arc(cx,cy,r, Math.PI/2, -Math.PI/2, false); // 左半円
+    const k = Math.cos(phase * 2 * Math.PI);
+    ctx.ellipse(cx,cy, Math.abs(k)*r, r, 0, -Math.PI/2, Math.PI/2, k<0);
+  }
+  ctx.closePath();
+  ctx.fillStyle='#f0e68c'; ctx.fill();
+
+  // 月齢テキスト
+  ctx.fillStyle='#fff'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(`月齢 ${age.toFixed(1)}`, cx, h-2);
+}
+
+// ===== ゴミカレンダー =====
+// 八王子市 収集地区3 (2026年3月〜2026年8月)
+// 祝日リスト (収集なし)
+const HOLIDAYS = [
+  '2026-03-20','2026-04-29','2026-05-04','2026-05-05','2026-05-06',
+  '2026-07-20','2026-08-11',
+  '2026-09-21','2026-09-22','2026-09-23','2026-10-12',
+  '2026-11-03','2026-11-23','2026-12-31',
+  '2027-01-01','2027-01-11','2027-02-11','2027-02-23'
+];
+
+function dateStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+function isHoliday(d){ return HOLIDAYS.includes(dateStr(d)); }
+
+function nthWeekday(d){ return Math.ceil(d.getDate() / 7); }
+
+function getGarbageTypes(d){
+  if(isHoliday(d)) return null;
+  const dow = d.getDay(), nth = nthWeekday(d);
+  switch(dow){
+    case 0: return null; // 日
+    case 6: return null; // 土
+    case 1: return ['可燃ごみ','容器包装プラスチック']; // 月
+    case 4: return ['可燃ごみ']; // 木
+    case 2: // 火
+      if(nth===2) return ['不燃ごみ'];
+      if(nth===4) return ['缶'];
+      return ['びん','有害ごみ']; // 1,3,5週
+    case 3: // 水
+      return (nth%2===1) ? ['ダンボール','紙パック'] : ['雑誌・雑紙'];
+    case 5: // 金
+      return (nth%2===1) ? ['ペットボトル'] : ['古着・古布'];
+  }
+  return null;
+}
+
+// ゴミ種類→絵文字・色
+const GARBAGE_INFO = {
+  '可燃ごみ':       {emoji:'🔥', color:'#e53935', bg:'#ffebee'},
+  '容器包装プラスチック': {emoji:'♻️', color:'#1565c0', bg:'#e3f2fd'},
+  'びん':          {emoji:'🍾', color:'#2e7d32', bg:'#e8f5e9'},
+  '有害ごみ':       {emoji:'⚠️', color:'#f57f17', bg:'#fff8e1'},
+  '不燃ごみ':       {emoji:'🪨', color:'#546e7a', bg:'#eceff1'},
+  '缶':           {emoji:'🥫', color:'#bf360c', bg:'#fbe9e7'},
+  'ダンボール':     {emoji:'📦', color:'#795548', bg:'#efebe9'},
+  '紙パック':       {emoji:'🧃', color:'#00838f', bg:'#e0f7fa'},
+  '雑誌・雑紙':     {emoji:'📰', color:'#4527a0', bg:'#ede7f6'},
+  'ペットボトル':    {emoji:'🧴', color:'#0277bd', bg:'#e1f5fe'},
+  '古着・古布':     {emoji:'👕', color:'#ad1457', bg:'#fce4ec'}
+};
+
+function findNextGarbageDay(from){
+  const d = new Date(from);
+  for(let i=1;i<=7;i++){
+    d.setDate(d.getDate()+1);
+    const g = getGarbageTypes(d);
+    if(g) return {date:new Date(d), types:g};
+  }
+  return null;
+}
+
+function updateGarbage(){
+  const now = new Date();
+  const hour = now.getHours();
+
+  let targetDate, isTomorrow;
+  if(hour >= 10){
+    targetDate = new Date(now); targetDate.setDate(targetDate.getDate()+1);
+    isTomorrow = true;
+  } else {
+    targetDate = new Date(now);
+    isTomorrow = false;
+  }
+
+  const types = getGarbageTypes(targetDate);
+  const labelEl = document.getElementById('garbageLabel');
+  const iconsEl = document.getElementById('garbageIcons');
+  const textEl = document.getElementById('garbageText');
+  const noteEl = document.getElementById('nextDayNote');
+
+  if(types){
+    const dayLabel = isTomorrow ? 'あしたのゴミ' : 'きょうのゴミ';
+    labelEl.textContent = `🗑️ ${dayLabel}（${targetDate.getMonth()+1}/${targetDate.getDate()} ${WEEKDAY_SHORT[targetDate.getDay()]}）`;
+    iconsEl.innerHTML = types.map(t => {
+      const info = GARBAGE_INFO[t] || {emoji:'❓',color:'#999',bg:'#f5f5f5'};
+      return `<div class="garbage-icon" style="background:${info.bg};border:2px solid ${info.color}20"><div class="emoji">${info.emoji}</div><div class="name" style="color:${info.color}">${t}</div></div>`;
+    }).join('');
+    textEl.innerHTML = types.map(t => {
+      const info = GARBAGE_INFO[t] || {color:'#333'};
+      return `<span style="color:${info.color};font-weight:800">${t}</span>`;
+    }).join(' ・ ');
+    noteEl.textContent = isTomorrow ? '※ 朝8時30分までに出してね' : '※ 朝8時30分までに出してね';
+  } else {
+    // 収集なし→次の収集日を探す
+    const next = findNextGarbageDay(targetDate);
+    if(next){
+      const nd = next.date;
+      labelEl.textContent = isTomorrow ? '🗑️ あしたはゴミの日じゃないよ' : '🗑️ きょうはゴミの日じゃないよ';
+      iconsEl.innerHTML = next.types.map(t => {
+        const info = GARBAGE_INFO[t] || {emoji:'❓',color:'#999',bg:'#f5f5f5'};
+        return `<div class="garbage-icon" style="background:${info.bg};border:2px solid ${info.color}20;opacity:0.7"><div class="emoji">${info.emoji}</div><div class="name" style="color:${info.color}">${t}</div></div>`;
+      }).join('');
+      textEl.innerHTML = `<span class="garbage-none">つぎのゴミの日：${nd.getMonth()+1}/${nd.getDate()}（${WEEKDAY_SHORT[nd.getDay()]}）</span>`;
+      noteEl.textContent = next.types.join(' ・ ');
+    } else {
+      labelEl.textContent = '🗑️ ゴミの日ではありません';
+      iconsEl.innerHTML = '';
+      textEl.innerHTML = '<span class="garbage-none">ー</span>';
+      noteEl.textContent = '';
+    }
+  }
+}
+
+// ===== 初期化 =====
+function initApp(){
+  drawSectors(); placeNumbers(); updateClock(); updateDate(); drawMoon(new Date()); updateGarbage();
+  setInterval(updateClock, 1000);
+  setInterval(()=>{ updateDate(); drawMoon(new Date()); updateGarbage(); }, 60000);
+}
+
+window.addEventListener('resize', ()=>{ drawSectors(); placeNumbers(); });
+</script>
+</body>
+</html>
