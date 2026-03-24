@@ -85,9 +85,9 @@ G.forEach(row=>{
         el.innerHTML='<span class="sp-icon">ひらがな</span>';
         el.onclick=()=>{stopRA();speak('ひらがなひょう')};
       }else if(d==='R'){
-        el.classList.add('sp-random');
-        el.innerHTML='<span class="sp-icon">🎲</span><span class="sp-label">ランダム</span>';
-        el.onclick=doRandom;
+        el.classList.add('sp-switch');
+        el.innerHTML='<span class="sp-icon">🕐</span><span class="sp-label">とけい</span>';
+        el.onclick=()=>location.href='gomi';
       }else if(d==='S'){
         el.classList.add('sp-switch');
         el.innerHTML='<span class="sp-icon">カタカナ</span><span class="sp-label">→きりかえ</span>';
