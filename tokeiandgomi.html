@@ -6,45 +6,58 @@
 <title>まりことけい＆ゴミカレンダー</title>
 <link href="https://fonts.googleapis.com/css2?family=Rounded+Mplus+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--pink:#e8609a;--pink-light:#f7b8d4;--pink-dark:#c0427a;--cream:#fff8f9}
+:root{--pink:#e8609a;--pink-light:#f7b8d4;--pink-dark:#c0427a;--cream:#fff8f9;--gold:#d4a843}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:linear-gradient(135deg,#fde8f0 0%,#fce4ec 40%,#f8bbd0 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'Rounded Mplus 1c','Hiragino Maru Gothic Pro',sans-serif;padding:16px}
+body{background:linear-gradient(135deg,#fde8f0 0%,#fce4ec 40%,#f8bbd0 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;font-family:'Rounded Mplus 1c','Hiragino Maru Gothic Pro',sans-serif;padding:16px}
 
-/* パスワード */
-#pwOverlay{position:fixed;inset:0;background:rgba(192,66,122,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
-#pwOverlay.hidden{display:none}
-#pwOverlay input{font-size:1.2rem;padding:10px 20px;border-radius:12px;border:2px solid #fff;text-align:center;font-family:inherit}
-#pwOverlay button{font-size:1.1rem;padding:10px 28px;border-radius:12px;border:none;background:#fff;color:var(--pink-dark);font-weight:800;cursor:pointer;font-family:inherit}
-#pwOverlay p{color:#fff;font-weight:700;font-size:1.1rem}
-#pwError{color:#ffeb3b;font-size:0.9rem;min-height:1.2em}
+/* リンク */
+.nav-link{text-align:center;margin-top:8px}
+.nav-link a{color:var(--pink-dark);font-weight:700;font-size:0.9rem;text-decoration:none;background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:20px;transition:all 0.15s}
+.nav-link a:hover{background:rgba(255,255,255,0.95);transform:translateY(-1px)}
 
-/* メイン横長レイアウト */
-.main{display:flex;gap:24px;align-items:stretch;max-width:1100px;width:100%}
+/* 全体ラッパー */
+#mainContent{display:none;flex-direction:column;align-items:center;gap:20px;max-width:1100px;width:100%}
+
+/* 上部: 横長レイアウト */
+.top-row{display:flex;gap:24px;align-items:stretch;width:100%}
 .clock-panel{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.clock-panel h1{font-size:1.3rem;color:var(--pink-dark);margin-bottom:10px;letter-spacing:2px}
+.clock-panel h1{font-size:1.3rem;color:var(--pink-dark);margin-bottom:10px;letter-spacing:2px;text-shadow:0 2px 4px rgba(192,66,122,0.2)}
 .info-panel{flex:1;display:flex;flex-direction:column;gap:16px;justify-content:center}
 
 /* 時計 */
 .clock-wrapper{position:relative;width:300px;height:300px}
-.clock-outer{position:absolute;inset:0;border-radius:50%;background:linear-gradient(145deg,#e8609a,#c0427a);box-shadow:0 8px 32px rgba(192,66,122,0.45)}
-.clock-ring{position:absolute;inset:10px;border-radius:50%;background:linear-gradient(145deg,#e8e8e8,#b0b0b0,#d8d8d8);box-shadow:inset 0 2px 6px rgba(0,0,0,0.2)}
+.clock-outer{position:absolute;inset:0;border-radius:50%;background:linear-gradient(145deg,#e8609a,#c0427a);box-shadow:0 8px 32px rgba(192,66,122,0.45),0 2px 8px rgba(0,0,0,0.15),inset 0 2px 6px rgba(255,255,255,0.3)}
+.clock-ring{position:absolute;inset:10px;border-radius:50%;background:linear-gradient(145deg,#e8e8e8,#b0b0b0,#d8d8d8);box-shadow:inset 0 2px 6px rgba(0,0,0,0.2),0 2px 4px rgba(255,255,255,0.5)}
 .clock-face{position:absolute;inset:18px;border-radius:50%;background:#fff;overflow:hidden}
 canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:50%}
 .number span{position:absolute;font-weight:800;transform:translate(-50%,-50%);line-height:1}
+.digital-clock{position:absolute;top:32%;left:50%;transform:translate(-50%,-50%);font-size:0.85rem;font-weight:800;color:#555;z-index:5;pointer-events:none;letter-spacing:1px;display:none}
 .hand{position:absolute;bottom:50%;left:50%;transform-origin:bottom center;border-radius:4px 4px 2px 2px}
-.hour-hand{width:7px;height:28%;background:linear-gradient(to top,#1565c0,#1e88e5);margin-left:-3.5px;z-index:10}
+.hour-hand{width:7px;height:28%;background:linear-gradient(to top,#1565c0,#1e88e5);margin-left:-3.5px;z-index:10;border-radius:4px 4px 3px 3px}
 .minute-hand{width:5px;height:38%;background:linear-gradient(to top,#c62828,#e53935);margin-left:-2.5px;z-index:11}
 .second-hand{width:3px;height:42%;background:linear-gradient(to top,#111,#333);margin-left:-1.5px;z-index:12}
-.center-dot{position:absolute;width:12px;height:12px;background:radial-gradient(circle,#aaa,#666);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.center-dot{position:absolute;width:14px;height:14px;background:radial-gradient(circle,#aaa,#666);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+
+/* 針ハイライト */
+.hand-dim{opacity:0.12!important;transition:opacity 0.4s ease!important}
+.hand-glow{transition:opacity 0.4s ease,filter 0.4s ease!important}
+.hour-hand.hand-glow{filter:drop-shadow(0 0 6px #1e88e5) drop-shadow(0 0 14px #1e88e5)}
+.minute-hand.hand-glow{filter:drop-shadow(0 0 6px #e53935) drop-shadow(0 0 14px #e53935)}
+.second-hand.hand-glow{filter:drop-shadow(0 0 6px #555) drop-shadow(0 0 14px #555)}
+@keyframes numberPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.6)}}
+.number-pop{animation:numberPulse 1s ease-in-out infinite!important;z-index:30!important;text-shadow:0 0 8px currentColor,0 0 16px currentColor!important}
+@keyframes answerBounce{0%,25%,100%{transform:scale(1)}12%{transform:scale(1.5)}}
+.answer-pop{display:inline-block;animation:answerBounce 2.4s ease-in-out infinite;font-size:1.15em;color:var(--pink-dark)}
+
+/* ぐりぐり */
+.clock-face.guriguri-cursor{cursor:grab}
+.clock-face.guriguri-cursor:active{cursor:grabbing}
 
 /* 日付セクション */
 .date-section{background:rgba(255,255,255,0.85);border-radius:20px;padding:16px 24px;box-shadow:0 3px 15px rgba(192,66,122,0.15);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .date-text{font-size:1.1rem;font-weight:800;color:#333}
 .date-text .year{font-size:0.95rem;color:#888}
 .date-text .main-date{font-size:2rem;color:var(--pink-dark)}
-.date-text .weekday{font-size:1.2rem;margin-left:8px}
-
-/* 月齢 */
 .moon-box{width:56px;height:56px;position:relative;flex-shrink:0}
 .moon-box canvas{width:100%;height:100%}
 
@@ -59,101 +72,119 @@ canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-rad
 .garbage-none{color:#999;font-style:italic}
 .next-day-note{font-size:0.85rem;color:#888;margin-top:4px}
 
-/* デジタル時計表示 */
-.digital-time{font-size:1rem;font-weight:800;color:#555;text-align:center;margin-top:6px}
+/* 下部: コントロール */
+.controls{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:500px}
+.speech-bubble{background:white;border-radius:20px;padding:10px 20px;font-size:1rem;font-weight:700;color:var(--pink-dark);box-shadow:0 3px 12px rgba(192,66,122,0.2);text-align:center;min-height:42px;display:flex;align-items:center;justify-content:center;width:100%;position:relative}
+.speech-bubble::before{content:'';position:absolute;top:-8px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-bottom-color:white;border-top:0}
+.btn-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.speak-btn{background:linear-gradient(135deg,#e8609a,#c0427a);color:white;border:none;border-radius:50px;padding:14px 28px;font-size:1.1rem;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(192,66,122,0.4),0 2px 4px rgba(0,0,0,0.1);transition:all 0.15s ease;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+.speak-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(192,66,122,0.5)}
+.speak-btn:active{transform:translateY(1px);box-shadow:0 2px 8px rgba(192,66,122,0.4)}
+.simple-btn{background:linear-gradient(135deg,#ffb74d,#ff9800);box-shadow:0 4px 16px rgba(255,152,0,0.4),0 2px 4px rgba(0,0,0,0.1);padding:14px 20px;font-size:1rem}
+.simple-btn:hover{box-shadow:0 6px 20px rgba(255,152,0,0.5)}
+.simple-btn:active{box-shadow:0 2px 8px rgba(255,152,0,0.4)}
+.quiz-btn{background:linear-gradient(135deg,#66bb6a,#43a047);color:white;border:none;border-radius:50px;padding:12px 14px;font-size:0.9rem;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(67,160,71,0.4),0 2px 4px rgba(0,0,0,0.1);transition:all 0.15s ease;letter-spacing:1px;display:flex;align-items:center;justify-content:center;gap:4px;flex:1}
+.quiz-btn:hover{transform:translateY(-2px)}
+.quiz-btn:active{transform:translateY(1px)}
+.quiz-easy{background:linear-gradient(135deg,#aed581,#8bc34a);box-shadow:0 4px 16px rgba(139,195,74,0.4)}
+.quiz-hard{background:linear-gradient(135deg,#ff8a65,#e64a19);box-shadow:0 4px 16px rgba(230,74,25,0.4)}
+.guriguri-btn{background:linear-gradient(135deg,#ab47bc,#8e24aa);box-shadow:0 4px 16px rgba(142,36,170,0.4),0 2px 4px rgba(0,0,0,0.1);padding:14px 20px;font-size:1rem}
+.guriguri-btn:hover{box-shadow:0 6px 20px rgba(142,36,170,0.5)}
+.guriguri-btn.active{background:linear-gradient(135deg,#ce93d8,#ab47bc);box-shadow:0 0 20px rgba(142,36,170,0.6),0 4px 16px rgba(142,36,170,0.4)}
+.alarm-area{background:rgba(255,255,255,0.7);border-radius:20px;padding:14px 20px;width:100%;box-shadow:0 2px 12px rgba(192,66,122,0.15)}
+.alarm-title{font-size:0.85rem;font-weight:800;color:var(--pink-dark);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.alarm-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.alarm-row select{font-family:inherit;font-size:0.9rem;font-weight:700;border:2px solid var(--pink-light);border-radius:10px;padding:6px 10px;background:white;color:var(--pink-dark);cursor:pointer;outline:none}
+.alarm-set-btn{background:linear-gradient(135deg,#ff9800,#f57c00);color:white;border:none;border-radius:12px;padding:7px 16px;font-size:0.85rem;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 3px 10px rgba(245,124,0,0.35);transition:all 0.15s}
+.alarm-set-btn:hover{transform:translateY(-1px)}
+.alarm-cancel-btn{background:#bbb;color:white;border:none;border-radius:12px;padding:7px 14px;font-size:0.85rem;font-weight:800;font-family:inherit;cursor:pointer;transition:all 0.15s}
+.alarm-status{font-size:0.8rem;font-weight:700;color:#f57c00;margin-top:6px}
 
 /* レスポンシブ */
 @media(max-width:768px){
-  .main{flex-direction:column;align-items:center}
-  .clock-wrapper{width:240px;height:240px}
+  .top-row{flex-direction:column;align-items:center}
+  .clock-wrapper{width:260px;height:260px}
   .info-panel{width:100%}
 }
 </style>
 </head>
 <body>
 
-<!-- パスワード画面 -->
-<div id="pwOverlay">
-  <p>パスワードをいれてね</p>
-  <input type="password" id="pwInput" placeholder="パスワード" autofocus>
-  <button onclick="checkPw()">はいる</button>
-  <div id="pwError"></div>
-</div>
-
 <!-- メインコンテンツ -->
-<div class="main" id="mainContent" style="display:none">
-  <!-- 左: 時計 -->
-  <div class="clock-panel">
-    <h1>まりことけい</h1>
-    <div class="clock-wrapper">
-      <div class="clock-outer"></div>
-      <div class="clock-ring"></div>
-      <div class="clock-face" id="clockFace">
-        <canvas class="sector-canvas" id="sectorCanvas"></canvas>
-        <div id="numbersLayer"></div>
-        <div class="hand hour-hand" id="hourHand"></div>
-        <div class="hand minute-hand" id="minuteHand"></div>
-        <div class="hand second-hand" id="secondHand"></div>
-        <div class="center-dot"></div>
+<div id="mainContent" style="display:flex">
+  <!-- 上部: 時計 + 情報パネル -->
+  <div class="top-row">
+    <div class="clock-panel">
+      <h1>まりことけい</h1>
+      <div class="clock-wrapper">
+        <div class="clock-outer"></div>
+        <div class="clock-ring"></div>
+        <div class="clock-face" id="clockFace">
+          <canvas class="sector-canvas" id="sectorCanvas"></canvas>
+          <canvas class="sector-canvas" id="explainCanvas" style="pointer-events:none"></canvas>
+          <div id="numbersLayer"></div>
+          <div class="digital-clock" id="digitalClock"></div>
+          <div class="hand hour-hand" id="hourHand"></div>
+          <div class="hand minute-hand" id="minuteHand"></div>
+          <div class="hand second-hand" id="secondHand"></div>
+          <div class="center-dot"></div>
+        </div>
       </div>
     </div>
-    <div class="digital-time" id="digitalTime"></div>
+    <div class="info-panel">
+      <div class="date-section">
+        <div class="date-text">
+          <div class="year" id="dateYear"></div>
+          <div class="main-date" id="dateMain"></div>
+        </div>
+        <div class="moon-box"><canvas id="moonCanvas" width="112" height="112"></canvas></div>
+      </div>
+      <div class="garbage-section">
+        <div class="garbage-label" id="garbageLabel"></div>
+        <div class="garbage-icons" id="garbageIcons"></div>
+        <div class="garbage-text" id="garbageText"></div>
+        <div class="next-day-note" id="nextDayNote"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- 右: 情報パネル -->
-  <div class="info-panel">
-    <div class="date-section">
-      <div class="date-text">
-        <div class="year" id="dateYear"></div>
-        <div class="main-date" id="dateMain"></div>
+  <!-- 下部: コントロール -->
+  <div class="controls">
+    <div class="speech-bubble" id="speechBubble">ボタンをおしてみてね！</div>
+    <div class="btn-row">
+      <button class="speak-btn" onclick="speakTime()">いまなんじ？</button>
+      <button class="speak-btn simple-btn" onclick="simpleTime()">かんたん</button>
+    </div>
+    <div class="btn-row">
+      <button class="quiz-btn quiz-easy" onclick="quizTime('easy')">やさしい</button>
+      <button class="quiz-btn" onclick="quizTime('normal')">ふつう</button>
+      <button class="quiz-btn quiz-hard" onclick="quizTime('hard')">むずかしい</button>
+    </div>
+    <div class="btn-row">
+      <button class="speak-btn guriguri-btn" onclick="toggleGuriguri()">ぐりぐり</button>
+    </div>
+    <div class="alarm-area">
+      <div class="alarm-title">アラームをセットする</div>
+      <div class="alarm-row">
+        <select id="alarmHour"></select>
+        <span style="font-weight:800;color:#c0427a">じ</span>
+        <select id="alarmMin"></select>
+        <span style="font-weight:800;color:#c0427a">ふん</span>
+        <select id="alarmSec"></select>
+        <span style="font-weight:800;color:#c0427a">びょう</span>
+        <button class="alarm-set-btn" onclick="setAlarm()">セット！</button>
+        <button class="alarm-cancel-btn" onclick="cancelAlarm()">けす</button>
       </div>
-      <div class="moon-box"><canvas id="moonCanvas" width="112" height="112"></canvas></div>
+      <div class="alarm-status" id="alarmStatus"></div>
     </div>
-    <div class="garbage-section">
-      <div class="garbage-label" id="garbageLabel"></div>
-      <div class="garbage-icons" id="garbageIcons"></div>
-      <div class="garbage-text" id="garbageText"></div>
-      <div class="next-day-note" id="nextDayNote"></div>
-    </div>
+    <div class="nav-link"><a href="/hiragana.html">ひらがなのれんしゅう →</a></div>
   </div>
 </div>
 
 <script>
-// ===== パスワード =====
-const PW_HASH = 'mariko';
+window.addEventListener('load', function(){ setTimeout(initApp, 100); });
 
-function showMain(){
-  document.getElementById('pwOverlay').classList.add('hidden');
-  document.getElementById('mainContent').style.display = 'flex';
-  // レイアウト確定を待ってから初期化
-  setTimeout(initApp, 100);
-}
-
-function checkPw(){
-  const v = document.getElementById('pwInput').value;
-  if(v === PW_HASH){
-    localStorage.setItem('tg_auth','1');
-    showMain();
-  } else {
-    document.getElementById('pwError').textContent = 'ちがうよ！もういちど いれてね';
-  }
-}
-
-document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPw(); });
-
-// 認証済みなら即表示
-if(localStorage.getItem('tg_auth')==='1'){
-  document.getElementById('pwOverlay').classList.add('hidden');
-  document.getElementById('mainContent').style.display = 'flex';
-}
-// ページ読み込み完了後に初期化
-window.addEventListener('load', function(){
-  if(localStorage.getItem('tg_auth')==='1'){
-    setTimeout(initApp, 100);
-  }
-});
-
-// ===== 時計描画 =====
+// ===== セクターカラー =====
 const sectorColors = ['#ffeb3b','#ff9800','#f44336','#e91e63','#9c27b0','#3f51b5','#2196f3','#00bcd4','#009688','#4caf50','#8bc34a','#cddc39'];
 
 function drawSectors(){
@@ -174,82 +205,362 @@ function placeNumbers(){
   for(let i=1;i<=12;i++){
     const a=(i/12)*Math.PI*2-Math.PI/2, rd=s*0.4;
     const sp=document.createElement('span');
-    sp.textContent=i; sp.style.cssText=`left:${cx+Math.cos(a)*rd}px;top:${cy+Math.sin(a)*rd}px;position:absolute;font-size:${s*0.075}px;font-weight:800;color:#1565c0;transform:translate(-50%,-50%)`;
+    sp.textContent=i; sp.setAttribute('data-hour',i);
+    sp.style.cssText=`left:${cx+Math.cos(a)*rd}px;top:${cy+Math.sin(a)*rd}px;position:absolute;font-size:${s*0.075}px;font-weight:800;color:#1565c0;transform:translate(-50%,-50%)`;
     layer.appendChild(sp);
   }
   for(let i=1;i<=60;i++){
     const a=(i/60)*Math.PI*2-Math.PI/2, rd=s*0.455;
     const sp=document.createElement('span');
     sp.textContent=i===60?'0':i;
+    sp.setAttribute('data-minute', i===60?0:i);
     sp.style.cssText=`left:${cx+Math.cos(a)*rd}px;top:${cy+Math.sin(a)*rd}px;position:absolute;font-size:${s*0.028}px;font-weight:700;color:#e53935;transform:translate(-50%,-50%);line-height:1`;
     layer.appendChild(sp);
   }
+  // 分目盛り
+  const fc=document.createElement('canvas');
+  fc.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
+  fc.width=s; fc.height=s;
+  const fctx=fc.getContext('2d');
+  for(let i=0;i<60;i++){
+    const a=(i/60)*Math.PI*2-Math.PI/2, isH=i%5===0;
+    const r1=s*(isH?0.39:0.41), r2=s*0.425;
+    fctx.beginPath();
+    fctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);
+    fctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);
+    fctx.strokeStyle=isH?'#888':'#ccc'; fctx.lineWidth=isH?2:1; fctx.stroke();
+  }
+  layer.appendChild(fc);
 }
 
+// ===== 時計の針 =====
+let clockPaused = false;
+
 function updateClock(){
+  if(clockPaused) return;
   const now=new Date(), h=now.getHours()%12, m=now.getMinutes(), s=now.getSeconds();
   document.getElementById('hourHand').style.transform=`rotate(${h/12*360+m/60*30}deg)`;
   document.getElementById('minuteHand').style.transform=`rotate(${m/60*360}deg)`;
   document.getElementById('secondHand').style.transform=`rotate(${s/60*360}deg)`;
-  const p=now.getHours()<12?'ごぜん':'ごご', h12=h||12;
-  document.getElementById('digitalTime').innerHTML=`${p} ${h12}じ ${String(m).padStart(2,'0')}ふん ${String(s).padStart(2,'0')}びょう`;
+  if(simpleActive) updateSimpleHighlights();
+  checkAlarm(now);
+}
+
+// ===== 午前・午後ヘルパー =====
+function ampm(h24){
+  const period = h24 < 12 ? 'ごぜん' : 'ごご';
+  const h12 = h24 % 12 || 12;
+  return { period, h12 };
+}
+
+// ===== 読み上げ =====
+function speakTime(){
+  if(guriguriActive) toggleGuriguri();
+  const now=new Date(), h=now.getHours(), m=now.getMinutes(), s=now.getSeconds();
+  const {period,h12}=ampm(h);
+  clockPaused=true;
+  document.getElementById('secondHand').style.transition='transform 0.1s ease-out';
+  const text=`${period}、${h12}じ、${m}ふん、${s}びょうです！`;
+  document.getElementById('speechBubble').textContent=`${period} ${h12}じ ${m}ふん ${s}びょう！`;
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text); u.lang='ja-JP'; u.rate=0.82; u.pitch=1.3;
+    u.onend=()=>{ document.getElementById('secondHand').style.transition=''; clockPaused=false; };
+    window.speechSynthesis.speak(u);
+  } else { setTimeout(()=>{ document.getElementById('secondHand').style.transition=''; clockPaused=false; },2000); }
+}
+
+// ===== かんたんモード =====
+let simpleActive = false;
+
+function simpleTime(){
+  if(quizActive) return;
+  if(guriguriActive && !simpleActive) toggleGuriguri();
+  if(simpleActive){
+    simpleActive=false; clearExplainCanvas();
+    document.querySelectorAll('.number-pop').forEach(el=>el.classList.remove('number-pop'));
+    document.getElementById('digitalClock').style.display='none';
+    document.getElementById('speechBubble').textContent='ボタンをおしてみてね！';
+    return;
+  }
+  simpleActive=true;
+  document.getElementById('digitalClock').style.display='block';
+  updateSimpleHighlights();
+}
+
+function updateSimpleHighlights(){
+  if(!simpleActive) return;
+  const now=new Date(), h12=now.getHours()%12||12, m=now.getMinutes(), s=now.getSeconds();
+  const {period}=ampm(now.getHours());
+  drawExplainArc('hour',h12);
+  document.querySelectorAll('.number-pop').forEach(el=>el.classList.remove('number-pop'));
+  const hEl=document.querySelector(`[data-hour="${h12}"]`); if(hEl) hEl.classList.add('number-pop');
+  const mEl=document.querySelector(`[data-minute="${m}"]`); if(mEl) mEl.classList.add('number-pop');
+  const mm=String(m).padStart(2,'0'), ss=String(s).padStart(2,'0');
+  document.getElementById('digitalClock').innerHTML=`${period} <span style="color:#e53935">${h12}</span>:<span style="color:#1565c0">${mm}</span>:<span style="color:#333">${ss}</span>`;
+  document.getElementById('speechBubble').innerHTML=`${period} <span style="color:#e53935;font-weight:800">${h12}じ</span> <span style="color:#1565c0;font-weight:800">${m}ふん</span>`;
+}
+
+// ===== アラーム =====
+let alarmHour=null, alarmMin=null, alarmSec=null, alarmFired=false, alarmInterval=null;
+
+function buildSelects(){
+  const hS=document.getElementById('alarmHour'), mS=document.getElementById('alarmMin'), sS=document.getElementById('alarmSec');
+  for(let i=0;i<24;i++){const o=document.createElement('option');o.value=i;o.textContent=String(i).padStart(2,'0');hS.appendChild(o);}
+  for(let i=0;i<60;i++){const o=document.createElement('option');o.value=i;o.textContent=String(i).padStart(2,'0');mS.appendChild(o);}
+  for(let i=0;i<60;i++){const o=document.createElement('option');o.value=i;o.textContent=String(i).padStart(2,'0');sS.appendChild(o);}
+  const now=new Date(); hS.value=now.getHours(); mS.value=now.getMinutes()+1<60?now.getMinutes()+1:0; sS.value=0;
+}
+
+function setAlarm(){
+  alarmHour=parseInt(document.getElementById('alarmHour').value);
+  alarmMin=parseInt(document.getElementById('alarmMin').value);
+  alarmSec=parseInt(document.getElementById('alarmSec').value);
+  alarmFired=false;
+  const{period:ap,h12:ah}=ampm(alarmHour);
+  document.getElementById('alarmStatus').textContent=`${ap} ${ah}じ ${String(alarmMin).padStart(2,'0')}ふん ${String(alarmSec).padStart(2,'0')}びょう にアラームをセットしたよ！`;
+}
+
+function cancelAlarm(){
+  alarmHour=null;alarmMin=null;alarmSec=null;
+  if(alarmInterval){clearInterval(alarmInterval);alarmInterval=null;}
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  document.getElementById('alarmStatus').textContent='アラームをけしたよ。';
+}
+
+function checkAlarm(now){
+  if(alarmHour===null||alarmFired) return;
+  if(now.getHours()===alarmHour&&now.getMinutes()===alarmMin&&now.getSeconds()===alarmSec){
+    alarmFired=true; ringAlarm();
+  }
+}
+
+function ringAlarm(){
+  document.getElementById('speechBubble').textContent='アラームの じかんだよ！';
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+    const{period:ap,h12:ah}=ampm(alarmHour);
+    const u=new SpeechSynthesisUtterance(`アラームの時間です！${ap}、${ah}じ、${alarmMin}ふんになりましたよ！`);
+    u.lang='ja-JP';u.rate=0.85;u.pitch=1.4; window.speechSynthesis.speak(u);
+  }
+  let cnt=0;
+  alarmInterval=setInterval(()=>{cnt++;if(cnt>=3){clearInterval(alarmInterval);return;}
+    if('speechSynthesis' in window){const u2=new SpeechSynthesisUtterance('アラーム！アラーム！');u2.lang='ja-JP';u2.pitch=1.5;u2.rate=1.0;window.speechSynthesis.speak(u2);}
+  },3000);
+}
+
+// ===== もんだいモード =====
+let quizActive=false, quizTimer=null;
+
+function quizTime(difficulty){
+  if(quizActive) return;
+  if(guriguriActive) toggleGuriguri();
+  quizActive=true;
+  document.querySelectorAll('.quiz-btn').forEach(b=>b.style.opacity='0.5');
+  const qH=Math.floor(Math.random()*12)+1;
+  let qM, qS;
+  if(difficulty==='easy'){qM=0;qS=0;}
+  else if(difficulty==='normal'){qM=Math.floor(Math.random()*60);qS=0;}
+  else{qM=Math.floor(Math.random()*60);qS=Math.floor(Math.random()*60);}
+
+  clockPaused=true;
+  const hourDeg=(qH/12)*360+(qM/60)*30, minDeg=(qM/60)*360, secDeg=(qS/60)*360;
+  document.getElementById('hourHand').style.transition='transform 0.5s ease';
+  document.getElementById('minuteHand').style.transition='transform 0.5s ease';
+  document.getElementById('secondHand').style.transition='transform 0.5s ease';
+  document.getElementById('hourHand').style.transform=`rotate(${hourDeg}deg)`;
+  document.getElementById('minuteHand').style.transform=`rotate(${minDeg}deg)`;
+  document.getElementById('secondHand').style.transform=`rotate(${secDeg}deg)`;
+  document.getElementById('secondHand').style.display=difficulty==='hard'?'':'none';
+
+  let bubbleText,speechText;
+  if(difficulty==='easy'){bubbleText='もんだい！いま なんじ？';speechText='もんだいです。いま、なんじですか？';}
+  else if(difficulty==='normal'){bubbleText='もんだい！いま なんじ なんぷん？';speechText='もんだいです。いま、なんじ、なんぷんですか？';}
+  else{bubbleText='もんだい！いま なんじ なんぷん なんびょう？';speechText='もんだいです。いま、なんじ、なんぷん、なんびょうですか？';}
+  document.getElementById('speechBubble').textContent=bubbleText;
+  if('speechSynthesis' in window){window.speechSynthesis.cancel();const q=new SpeechSynthesisUtterance(speechText);q.lang='ja-JP';q.rate=0.82;q.pitch=1.3;window.speechSynthesis.speak(q);}
+  quizTimer=setTimeout(()=>showExplanation(qH,qM,qS,difficulty),10000);
+}
+
+function showExplanation(qH,qM,qS,difficulty){
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  const allSteps=[
+    {hand:'hour',value:qH,bubble:`みじかい あおい はりが ${qH} をさしているね → ${qH}じ！`,speech:`みじかい、あおいはりを、みてね。${qH}のところを、さしているから、${qH}じ！`},
+    {hand:'minute',value:qM,bubble:`ながい あかい はりが ${qM} をさしているね → ${qM}ふん！`,speech:`つぎは、ながい、あかいはりを、みてね。${qM}のところを、さしているから、${qM}ふん！`},
+    {hand:'second',value:qS,bubble:`ほそい はりが ${qS} をさしているね → ${qS}びょう！`,speech:`さいごに、ほそいはりを、みてね。${qS}のところを、さしているから、${qS}びょう！`}
+  ];
+  let steps,answerHTML,answerSpeech;
+  if(difficulty==='easy'){
+    steps=[allSteps[0]];
+    answerHTML=`こたえは <span class="answer-pop">${qH}じ</span>！できたかな？`;
+    answerSpeech=`だから、${qH}じだよ！できたかな？`;
+  } else if(difficulty==='normal'){
+    steps=[allSteps[0],allSteps[1]];
+    answerHTML=`こたえは <span class="answer-pop">${qH}じ</span> <span class="answer-pop" style="animation-delay:0.8s">${qM}ふん</span>！できたかな？`;
+    answerSpeech=`だから、${qH}じ、${qM}ふんだよ！できたかな？`;
+  } else {
+    steps=allSteps;
+    answerHTML=`こたえは <span class="answer-pop">${qH}じ</span> <span class="answer-pop" style="animation-delay:0.8s">${qM}ふん</span> <span class="answer-pop" style="animation-delay:1.6s">${qS}びょう</span>！できたかな？`;
+    answerSpeech=`だから、${qH}じ、${qM}ふん、${qS}びょうだよ！できたかな？`;
+  }
+  let idx=0;
+  function doStep(){
+    if(idx>=steps.length){
+      clearHandHighlight(); clearExplainCanvas();
+      document.querySelectorAll('.number-pop').forEach(el=>el.classList.remove('number-pop'));
+      document.getElementById('speechBubble').innerHTML=answerHTML;
+      if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(answerSpeech);u.lang='ja-JP';u.rate=0.82;u.pitch=1.3;u.onend=finishQuiz;window.speechSynthesis.speak(u);}
+      else setTimeout(finishQuiz,3000);
+      return;
+    }
+    const st=steps[idx];
+    setHandHighlight(st.hand); highlightNumber(st.hand,st.value); drawExplainArc(st.hand,st.value);
+    document.getElementById('speechBubble').textContent=st.bubble;
+    if('speechSynthesis' in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(st.speech);u.lang='ja-JP';u.rate=0.82;u.pitch=1.3;u.onend=()=>{idx++;setTimeout(doStep,800);};window.speechSynthesis.speak(u);}
+    else{idx++;setTimeout(doStep,4000);}
+  }
+  doStep();
+}
+
+function finishQuiz(){
+  clearHandHighlight(); clearExplainCanvas();
+  document.querySelectorAll('.number-pop').forEach(el=>el.classList.remove('number-pop'));
+  ['hourHand','minuteHand','secondHand'].forEach(id=>{document.getElementById(id).style.transition='';});
+  document.getElementById('secondHand').style.display='';
+  clockPaused=false; quizActive=false;
+  document.querySelectorAll('.quiz-btn').forEach(b=>b.style.opacity='');
+  document.getElementById('speechBubble').textContent='ボタンをおしてみてね！';
+}
+
+function setHandHighlight(activeHand){
+  const map={hour:'hourHand',minute:'minuteHand',second:'secondHand'};
+  Object.entries(map).forEach(([key,id])=>{
+    const el=document.getElementById(id);
+    if(key===activeHand){el.classList.remove('hand-dim');el.classList.add('hand-glow');}
+    else{el.classList.add('hand-dim');el.classList.remove('hand-glow');}
+  });
+}
+function clearHandHighlight(){['hourHand','minuteHand','secondHand'].forEach(id=>{const el=document.getElementById(id);el.classList.remove('hand-dim','hand-glow');});}
+function highlightNumber(type,value){
+  document.querySelectorAll('.number-pop').forEach(el=>el.classList.remove('number-pop'));
+  const attr=type==='hour'?'data-hour':'data-minute';
+  const el=document.querySelector(`[${attr}="${value}"]`); if(el) el.classList.add('number-pop');
+}
+
+function drawExplainArc(type,value){
+  const c=document.getElementById('explainCanvas');
+  const s=c.parentElement.offsetWidth; c.width=s; c.height=s;
+  const ctx=c.getContext('2d');
+  if(type!=='hour') return;
+  const si=value%12, cx=s/2, cy=s/2, r=s/2;
+  const a1=(si/12)*Math.PI*2-Math.PI/2, a2=((si+1)/12)*Math.PI*2-Math.PI/2;
+  ctx.beginPath(); ctx.arc(cx,cy,r,a1,a2); ctx.arc(cx,cy,r*0.58,a2,a1,true); ctx.closePath();
+  ctx.fillStyle=sectorColors[si]+'bb'; ctx.fill();
+  ctx.strokeStyle=sectorColors[si]; ctx.lineWidth=3; ctx.stroke();
+}
+function clearExplainCanvas(){const c=document.getElementById('explainCanvas');c.getContext('2d').clearRect(0,0,c.width,c.height);}
+
+// ===== ぐりぐりモード =====
+let guriguriActive=false, isDragging=false, prevAngle=0, guriguriMinDeg=0, guriguriHourBase=0;
+
+function toggleGuriguri(){
+  if(quizActive) return;
+  if(simpleActive) simpleTime();
+  if(guriguriActive){
+    guriguriActive=false; clockPaused=false;
+    document.getElementById('clockFace').classList.remove('guriguri-cursor');
+    document.querySelector('.guriguri-btn').classList.remove('active');
+    document.getElementById('secondHand').style.display='';
+    document.getElementById('digitalClock').style.display='none';
+    document.getElementById('speechBubble').textContent='ボタンをおしてみてね！';
+    return;
+  }
+  guriguriActive=true; clockPaused=true;
+  document.getElementById('clockFace').classList.add('guriguri-cursor');
+  document.querySelector('.guriguri-btn').classList.add('active');
+  document.getElementById('secondHand').style.display='none';
+  document.getElementById('digitalClock').style.display='block';
+  const now=new Date(), h=now.getHours()%12, m=now.getMinutes();
+  guriguriMinDeg=(m/60)*360; guriguriHourBase=(h/12)*360;
+  updateGuriguriDisplay();
+  document.getElementById('speechBubble').textContent='とけいをぐりぐりまわしてみよう！';
+}
+
+function getAngleFromCenter(e){
+  const face=document.getElementById('clockFace'), rect=face.getBoundingClientRect();
+  const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+  const x=(e.clientX||e.touches[0].clientX)-cx, y=(e.clientY||e.touches[0].clientY)-cy;
+  return Math.atan2(y,x)*(180/Math.PI)+90;
+}
+function normalizeAngle(a){return((a%360)+360)%360;}
+
+function onDragStart(e){if(!guriguriActive)return;isDragging=true;prevAngle=normalizeAngle(getAngleFromCenter(e));e.preventDefault();}
+function onDragMove(e){
+  if(!isDragging)return;
+  const curr=normalizeAngle(getAngleFromCenter(e));
+  let delta=curr-prevAngle; if(delta>180)delta-=360; if(delta<-180)delta+=360;
+  guriguriMinDeg+=delta; prevAngle=curr; updateGuriguriDisplay(); e.preventDefault();
+}
+function onDragEnd(){
+  if(!isDragging)return; isDragging=false;
+  const{h,m}=getGuriguriTime(), h12=h||12;
+  if('speechSynthesis' in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(`${h12}じ、${m}ふん`);u.lang='ja-JP';u.rate=0.85;u.pitch=1.3;window.speechSynthesis.speak(u);}
+}
+
+function getGuriguriTime(){
+  const normMin=normalizeAngle(guriguriMinDeg), m=Math.round((normMin/360)*60)%60;
+  const hourDeg=normalizeAngle(guriguriHourBase+guriguriMinDeg/12), h=Math.floor((hourDeg/360)*12);
+  return{h,m};
+}
+
+function updateGuriguriDisplay(){
+  const normMin=normalizeAngle(guriguriMinDeg), hourDeg=normalizeAngle(guriguriHourBase+guriguriMinDeg/12);
+  document.getElementById('minuteHand').style.transform=`rotate(${normMin}deg)`;
+  document.getElementById('hourHand').style.transform=`rotate(${hourDeg}deg)`;
+  const{h,m}=getGuriguriTime(), h12=h||12, {period}=ampm(h), mm=String(m).padStart(2,'0');
+  document.getElementById('digitalClock').innerHTML=`${period} <span style="color:#e53935">${h12}</span>:<span style="color:#1565c0">${mm}</span>`;
+  document.getElementById('speechBubble').innerHTML=`<span style="color:#e53935;font-weight:800">${h12}じ</span> <span style="color:#1565c0;font-weight:800">${m}ふん</span>`;
 }
 
 // ===== 日付表示 =====
-const WEEKDAYS = ['にちようび','げつようび','かようび','すいようび','もくようび','きんようび','どようび'];
 const WEEKDAY_SHORT = ['日','月','火','水','木','金','土'];
 
 function updateDate(){
   const now=new Date(), y=now.getFullYear(), mo=now.getMonth()+1, d=now.getDate(), dow=now.getDay();
-  const reiwa = y - 2018;
+  const reiwa=y-2018;
   document.getElementById('dateYear').textContent=`${y}年（令和${reiwa}年）`;
-  document.getElementById('dateMain').innerHTML=`${mo}月${d}日 <span class="weekday" style="color:${dow===0?'#e53935':dow===6?'#1565c0':'#333'}">(${WEEKDAY_SHORT[dow]})</span>`;
+  document.getElementById('dateMain').innerHTML=`${mo}月${d}日 <span style="color:${dow===0?'#e53935':dow===6?'#1565c0':'#333'}">(${WEEKDAY_SHORT[dow]})</span>`;
 }
 
 // ===== 月齢 =====
 function getMoonAge(date){
-  const known = new Date(2000, 0, 6, 18, 14); // 2000/1/6 18:14 UTC 新月
-  const diff = (date.getTime() - known.getTime()) / 86400000;
-  return ((diff % 29.53058770576) + 29.53058770576) % 29.53058770576;
+  const known=new Date(2000,0,6,18,14);
+  const diff=(date.getTime()-known.getTime())/86400000;
+  return((diff%29.53058770576)+29.53058770576)%29.53058770576;
 }
 
 function drawMoon(date){
-  const age = getMoonAge(date);
-  const c = document.getElementById('moonCanvas');
-  const ctx = c.getContext('2d');
+  const age=getMoonAge(date), c=document.getElementById('moonCanvas'), ctx=c.getContext('2d');
   const w=c.width, h=c.height, cx=w/2, cy=h/2, r=w/2-4;
   ctx.clearRect(0,0,w,h);
-
-  // 背景(暗)
-  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-  ctx.fillStyle='#1a1a2e'; ctx.fill();
-
-  // 明るい部分を描画
-  const phase = age / 29.53058770576; // 0-1
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle='#1a1a2e'; ctx.fill();
+  const phase=age/29.53058770576;
   ctx.beginPath();
-  // 右半分 or 左半分の弧
-  if(phase < 0.5){
-    // 新月→満月: 右から明るくなる
-    ctx.arc(cx,cy,r, -Math.PI/2, Math.PI/2, false); // 右半円
-    const k = Math.cos(phase * 2 * Math.PI);
-    ctx.ellipse(cx,cy, Math.abs(k)*r, r, 0, Math.PI/2, -Math.PI/2, k>0);
+  if(phase<0.5){
+    ctx.arc(cx,cy,r,-Math.PI/2,Math.PI/2,false);
+    const k=Math.cos(phase*2*Math.PI);
+    ctx.ellipse(cx,cy,Math.abs(k)*r,r,0,Math.PI/2,-Math.PI/2,k>0);
   } else {
-    // 満月→新月: 左から暗くなる
-    ctx.arc(cx,cy,r, Math.PI/2, -Math.PI/2, false); // 左半円
-    const k = Math.cos(phase * 2 * Math.PI);
-    ctx.ellipse(cx,cy, Math.abs(k)*r, r, 0, -Math.PI/2, Math.PI/2, k<0);
+    ctx.arc(cx,cy,r,Math.PI/2,-Math.PI/2,false);
+    const k=Math.cos(phase*2*Math.PI);
+    ctx.ellipse(cx,cy,Math.abs(k)*r,r,0,-Math.PI/2,Math.PI/2,k<0);
   }
-  ctx.closePath();
-  ctx.fillStyle='#f0e68c'; ctx.fill();
-
-  // 月齢テキスト
+  ctx.closePath(); ctx.fillStyle='#f0e68c'; ctx.fill();
   ctx.fillStyle='#fff'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
-  ctx.fillText(`月齢 ${age.toFixed(1)}`, cx, h-2);
+  ctx.fillText(`月齢 ${age.toFixed(1)}`,cx,h-2);
 }
 
 // ===== ゴミカレンダー =====
-// 八王子市 収集地区3 (2026年3月〜2026年8月)
-// 祝日リスト (収集なし)
 const HOLIDAYS = [
   '2026-03-20','2026-04-29','2026-05-04','2026-05-05','2026-05-06',
   '2026-07-20','2026-08-11',
@@ -257,118 +568,87 @@ const HOLIDAYS = [
   '2026-11-03','2026-11-23','2026-12-31',
   '2027-01-01','2027-01-11','2027-02-11','2027-02-23'
 ];
-
-function dateStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-
-function isHoliday(d){ return HOLIDAYS.includes(dateStr(d)); }
-
-function nthWeekday(d){ return Math.ceil(d.getDate() / 7); }
+function dateStr(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function isHoliday(d){return HOLIDAYS.includes(dateStr(d));}
+function nthWeekday(d){return Math.ceil(d.getDate()/7);}
 
 function getGarbageTypes(d){
   if(isHoliday(d)) return null;
-  const dow = d.getDay(), nth = nthWeekday(d);
+  const dow=d.getDay(), nth=nthWeekday(d);
   switch(dow){
-    case 0: return null; // 日
-    case 6: return null; // 土
-    case 1: return ['可燃ごみ','容器包装プラスチック']; // 月
-    case 4: return ['可燃ごみ']; // 木
-    case 2: // 火
-      if(nth===2) return ['不燃ごみ'];
-      if(nth===4) return ['缶'];
-      return ['びん','有害ごみ']; // 1,3,5週
-    case 3: // 水
-      return (nth%2===1) ? ['ダンボール','紙パック'] : ['雑誌・雑紙'];
-    case 5: // 金
-      return (nth%2===1) ? ['ペットボトル'] : ['古着・古布'];
+    case 0:case 6:return null;
+    case 1:return['可燃ごみ','容器包装プラスチック'];
+    case 4:return['可燃ごみ'];
+    case 2:if(nth===2)return['不燃ごみ'];if(nth===4)return['缶'];return['びん','有害ごみ'];
+    case 3:return(nth%2===1)?['ダンボール','紙パック']:['雑誌・雑紙'];
+    case 5:return(nth%2===1)?['ペットボトル']:['古着・古布'];
   }
   return null;
 }
 
-// ゴミ種類→絵文字・色
-const GARBAGE_INFO = {
-  '可燃ごみ':       {emoji:'🔥', color:'#e53935', bg:'#ffebee'},
-  '容器包装プラスチック': {emoji:'♻️', color:'#1565c0', bg:'#e3f2fd'},
-  'びん':          {emoji:'🍾', color:'#2e7d32', bg:'#e8f5e9'},
-  '有害ごみ':       {emoji:'⚠️', color:'#f57f17', bg:'#fff8e1'},
-  '不燃ごみ':       {emoji:'🪨', color:'#546e7a', bg:'#eceff1'},
-  '缶':           {emoji:'🥫', color:'#bf360c', bg:'#fbe9e7'},
-  'ダンボール':     {emoji:'📦', color:'#795548', bg:'#efebe9'},
-  '紙パック':       {emoji:'🧃', color:'#00838f', bg:'#e0f7fa'},
-  '雑誌・雑紙':     {emoji:'📰', color:'#4527a0', bg:'#ede7f6'},
-  'ペットボトル':    {emoji:'🧴', color:'#0277bd', bg:'#e1f5fe'},
-  '古着・古布':     {emoji:'👕', color:'#ad1457', bg:'#fce4ec'}
+const GARBAGE_INFO={
+  '可燃ごみ':{emoji:'🔥',color:'#e53935',bg:'#ffebee'},
+  '容器包装プラスチック':{emoji:'♻️',color:'#1565c0',bg:'#e3f2fd'},
+  'びん':{emoji:'🍾',color:'#2e7d32',bg:'#e8f5e9'},
+  '有害ごみ':{emoji:'⚠️',color:'#f57f17',bg:'#fff8e1'},
+  '不燃ごみ':{emoji:'🪨',color:'#546e7a',bg:'#eceff1'},
+  '缶':{emoji:'🥫',color:'#bf360c',bg:'#fbe9e7'},
+  'ダンボール':{emoji:'📦',color:'#795548',bg:'#efebe9'},
+  '紙パック':{emoji:'🧃',color:'#00838f',bg:'#e0f7fa'},
+  '雑誌・雑紙':{emoji:'📰',color:'#4527a0',bg:'#ede7f6'},
+  'ペットボトル':{emoji:'🧴',color:'#0277bd',bg:'#e1f5fe'},
+  '古着・古布':{emoji:'👕',color:'#ad1457',bg:'#fce4ec'}
 };
 
 function findNextGarbageDay(from){
-  const d = new Date(from);
-  for(let i=1;i<=7;i++){
-    d.setDate(d.getDate()+1);
-    const g = getGarbageTypes(d);
-    if(g) return {date:new Date(d), types:g};
-  }
+  const d=new Date(from);
+  for(let i=1;i<=7;i++){d.setDate(d.getDate()+1);const g=getGarbageTypes(d);if(g)return{date:new Date(d),types:g};}
   return null;
 }
 
 function updateGarbage(){
-  const now = new Date();
-  const hour = now.getHours();
-
-  let targetDate, isTomorrow;
-  if(hour >= 10){
-    targetDate = new Date(now); targetDate.setDate(targetDate.getDate()+1);
-    isTomorrow = true;
-  } else {
-    targetDate = new Date(now);
-    isTomorrow = false;
-  }
-
-  const types = getGarbageTypes(targetDate);
-  const labelEl = document.getElementById('garbageLabel');
-  const iconsEl = document.getElementById('garbageIcons');
-  const textEl = document.getElementById('garbageText');
-  const noteEl = document.getElementById('nextDayNote');
-
+  const now=new Date(), hour=now.getHours();
+  let targetDate,isTomorrow;
+  if(hour>=10){targetDate=new Date(now);targetDate.setDate(targetDate.getDate()+1);isTomorrow=true;}
+  else{targetDate=new Date(now);isTomorrow=false;}
+  const types=getGarbageTypes(targetDate);
+  const labelEl=document.getElementById('garbageLabel'), iconsEl=document.getElementById('garbageIcons'), textEl=document.getElementById('garbageText'), noteEl=document.getElementById('nextDayNote');
   if(types){
-    const dayLabel = isTomorrow ? 'あしたのゴミ' : 'きょうのゴミ';
-    labelEl.textContent = `🗑️ ${dayLabel}（${targetDate.getMonth()+1}/${targetDate.getDate()} ${WEEKDAY_SHORT[targetDate.getDay()]}）`;
-    iconsEl.innerHTML = types.map(t => {
-      const info = GARBAGE_INFO[t] || {emoji:'❓',color:'#999',bg:'#f5f5f5'};
-      return `<div class="garbage-icon" style="background:${info.bg};border:2px solid ${info.color}20"><div class="emoji">${info.emoji}</div><div class="name" style="color:${info.color}">${t}</div></div>`;
-    }).join('');
-    textEl.innerHTML = types.map(t => {
-      const info = GARBAGE_INFO[t] || {color:'#333'};
-      return `<span style="color:${info.color};font-weight:800">${t}</span>`;
-    }).join(' ・ ');
-    noteEl.textContent = isTomorrow ? '※ 朝8時30分までに出してね' : '※ 朝8時30分までに出してね';
+    const dayLabel=isTomorrow?'あしたのゴミ':'きょうのゴミ';
+    labelEl.textContent=`${dayLabel}（${targetDate.getMonth()+1}/${targetDate.getDate()} ${WEEKDAY_SHORT[targetDate.getDay()]}）`;
+    iconsEl.innerHTML=types.map(t=>{const i=GARBAGE_INFO[t]||{emoji:'❓',color:'#999',bg:'#f5f5f5'};return`<div class="garbage-icon" style="background:${i.bg};border:2px solid ${i.color}20"><div class="emoji">${i.emoji}</div><div class="name" style="color:${i.color}">${t}</div></div>`;}).join('');
+    textEl.innerHTML=types.map(t=>{const i=GARBAGE_INFO[t]||{color:'#333'};return`<span style="color:${i.color};font-weight:800">${t}</span>`;}).join(' ・ ');
+    noteEl.textContent='※ 朝8時30分までに出してね';
   } else {
-    // 収集なし→次の収集日を探す
-    const next = findNextGarbageDay(targetDate);
+    const next=findNextGarbageDay(targetDate);
     if(next){
-      const nd = next.date;
-      labelEl.textContent = isTomorrow ? '🗑️ あしたはゴミの日じゃないよ' : '🗑️ きょうはゴミの日じゃないよ';
-      iconsEl.innerHTML = next.types.map(t => {
-        const info = GARBAGE_INFO[t] || {emoji:'❓',color:'#999',bg:'#f5f5f5'};
-        return `<div class="garbage-icon" style="background:${info.bg};border:2px solid ${info.color}20;opacity:0.7"><div class="emoji">${info.emoji}</div><div class="name" style="color:${info.color}">${t}</div></div>`;
-      }).join('');
-      textEl.innerHTML = `<span class="garbage-none">つぎのゴミの日：${nd.getMonth()+1}/${nd.getDate()}（${WEEKDAY_SHORT[nd.getDay()]}）</span>`;
-      noteEl.textContent = next.types.join(' ・ ');
+      const nd=next.date;
+      labelEl.textContent=isTomorrow?'あしたはゴミの日じゃないよ':'きょうはゴミの日じゃないよ';
+      iconsEl.innerHTML=next.types.map(t=>{const i=GARBAGE_INFO[t]||{emoji:'❓',color:'#999',bg:'#f5f5f5'};return`<div class="garbage-icon" style="background:${i.bg};border:2px solid ${i.color}20;opacity:0.7"><div class="emoji">${i.emoji}</div><div class="name" style="color:${i.color}">${t}</div></div>`;}).join('');
+      textEl.innerHTML=`<span class="garbage-none">つぎのゴミの日：${nd.getMonth()+1}/${nd.getDate()}（${WEEKDAY_SHORT[nd.getDay()]}）</span>`;
+      noteEl.textContent=next.types.join(' ・ ');
     } else {
-      labelEl.textContent = '🗑️ ゴミの日ではありません';
-      iconsEl.innerHTML = '';
-      textEl.innerHTML = '<span class="garbage-none">ー</span>';
-      noteEl.textContent = '';
+      labelEl.textContent='ゴミの日ではありません';
+      iconsEl.innerHTML='';textEl.innerHTML='<span class="garbage-none">ー</span>';noteEl.textContent='';
     }
   }
 }
 
 // ===== 初期化 =====
 function initApp(){
-  drawSectors(); placeNumbers(); updateClock(); updateDate(); drawMoon(new Date()); updateGarbage();
+  drawSectors(); placeNumbers(); buildSelects();
+  updateClock(); updateDate(); drawMoon(new Date()); updateGarbage();
   setInterval(updateClock, 1000);
-  setInterval(()=>{ updateDate(); drawMoon(new Date()); updateGarbage(); }, 60000);
+  setInterval(()=>{updateDate();drawMoon(new Date());updateGarbage();}, 60000);
+  // ぐりぐりイベント
+  const face=document.getElementById('clockFace');
+  face.addEventListener('pointerdown',onDragStart);
+  window.addEventListener('pointermove',onDragMove);
+  window.addEventListener('pointerup',onDragEnd);
+  face.style.touchAction='none';
 }
 
-window.addEventListener('resize', ()=>{ drawSectors(); placeNumbers(); });
+window.addEventListener('resize',()=>{drawSectors();placeNumbers();});
 </script>
 </body>
 </html>
