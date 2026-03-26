@@ -110,6 +110,9 @@ canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-rad
 .routine-icon.done .emoji{transform:scale(1.1)}
 .routine-icon .routine-name{font-size:0.85rem;font-weight:800;color:#555}
 .routine-icon.done .routine-name{color:#fff}
+.routine-section.night{border-top-color:#b39ddb}
+.night-label{color:#5e35b1!important}
+.routine-section.night .routine-icon.done{background:linear-gradient(135deg,#ce93d8,#ab47bc)!important;border-color:#8e24aa!important;box-shadow:0 2px 12px rgba(142,36,170,0.4)}
 
 /* 下部: コントロール */
 .controls{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:500px}
@@ -194,6 +197,10 @@ canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-rad
       <div class="routine-section" id="routineSection">
         <div class="routine-label">あさのルーティン</div>
         <div class="routine-icons" id="routineIcons"></div>
+      </div>
+      <div class="routine-section night" id="nightRoutineSection">
+        <div class="routine-label night-label">よるのルーティン</div>
+        <div class="routine-icons" id="nightRoutineIcons"></div>
       </div>
       <button class="speak-btn" onclick="speakTime()" style="margin-top:12px;">いまなんじ？</button>
     </div>
@@ -780,6 +787,67 @@ function updateRoutine(){
   applyRoutineDoneUI();
 }
 
+// ===== よるのルーティン =====
+const NIGHT_ROUTINE_ITEMS=[
+  {name:'おふろ',emoji:'🛁',doneEmoji:'🌙'},
+  {name:'かみふく',emoji:'💨',doneEmoji:'🌙'},
+  {name:'はみがき',emoji:'🪥',doneEmoji:'🌙'},
+  {name:'パジャマ',emoji:'👕',doneEmoji:'🌙'},
+  {name:'ベッド',emoji:'🛏️',doneEmoji:'🌙'}
+];
+
+let nightRoutineDoneKey='';
+let nightRoutineDoneSet=new Set();
+
+function loadNightRoutineDone(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('nightRoutineDone')||'{}');
+    if(saved.date===nightRoutineDoneKey){nightRoutineDoneSet=new Set(saved.done||[]);}
+    else{nightRoutineDoneSet=new Set();saveNightRoutineDone();}
+  }catch(e){nightRoutineDoneSet=new Set();}
+}
+function saveNightRoutineDone(){
+  localStorage.setItem('nightRoutineDone',JSON.stringify({date:nightRoutineDoneKey,done:[...nightRoutineDoneSet]}));
+}
+function toggleNightRoutineDone(idx){
+  if(nightRoutineDoneSet.has(idx)){nightRoutineDoneSet.delete(idx);}
+  else{nightRoutineDoneSet.add(idx);}
+  saveNightRoutineDone();
+  applyNightRoutineDoneUI();
+}
+function applyNightRoutineDoneUI(){
+  document.querySelectorAll('.routine-icon[data-nridx]').forEach(el=>{
+    const idx=parseInt(el.getAttribute('data-nridx'));
+    const emojiEl=el.querySelector('.emoji');
+    const item=NIGHT_ROUTINE_ITEMS[idx];
+    if(nightRoutineDoneSet.has(idx)){
+      el.classList.add('done');
+      emojiEl.textContent=item.doneEmoji;
+    } else {
+      el.classList.remove('done');
+      emojiEl.textContent=item.emoji;
+    }
+  });
+}
+
+function updateNightRoutine(){
+  const now=new Date();
+  const h=now.getHours();
+  const section=document.getElementById('nightRoutineSection');
+  // 毎日19:00～21:00のみ表示
+  if(h<19||h>=21){section.style.display='none';return;}
+  section.style.display='';
+
+  const key=dateStr(now);
+  if(key!==nightRoutineDoneKey){nightRoutineDoneKey=key;loadNightRoutineDone();}
+
+  const iconsEl=document.getElementById('nightRoutineIcons');
+  iconsEl.innerHTML=NIGHT_ROUTINE_ITEMS.map((item,idx)=>
+    `<div class="routine-icon" data-nridx="${idx}" onclick="toggleNightRoutineDone(${idx})"><div class="emoji">${item.emoji}</div><div class="routine-name">${item.name}</div></div>`
+  ).join('');
+  applyNightRoutineDoneUI();
+}
+
 // ===== 天気予報（Open-Meteo API / 八王子） =====
 const WEATHER_EMOJI={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌧️',55:'🌧️',56:'🌨️',57:'🌨️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌨️',67:'🌨️',71:'🌨️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌧️',82:'🌧️',85:'❄️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
 const WEATHER_DESC={0:'はれ',1:'はれ',2:'くもり',3:'くもり',45:'きり',48:'きり',51:'こさめ',53:'あめ',55:'あめ',56:'ひえたあめ',57:'ひえたあめ',61:'あめ',63:'あめ',65:'おおあめ',66:'ひえたあめ',67:'ひえたあめ',71:'ゆき',73:'ゆき',75:'おおゆき',77:'ゆき',80:'にわかあめ',81:'にわかあめ',82:'おおあめ',85:'ゆき',86:'おおゆき',95:'かみなり',96:'ひょう',99:'ひょう'};
@@ -841,9 +909,9 @@ function renderWeather(data){
 // ===== 初期化 =====
 function initApp(){
   drawSectors(); placeNumbers(); buildSelects();
-  updateClock(); updateDate(); drawMoon(new Date()); updateGarbage(); updateRoutine(); fetchWeather();
+  updateClock(); updateDate(); drawMoon(new Date()); updateGarbage(); updateRoutine(); updateNightRoutine(); fetchWeather();
   setInterval(updateClock, 1000);
-  setInterval(()=>{updateDate();drawMoon(new Date());updateGarbage();updateRoutine();}, 60000);
+  setInterval(()=>{updateDate();drawMoon(new Date());updateGarbage();updateRoutine();updateNightRoutine();}, 60000);
   setInterval(fetchWeather, 1800000);
   // ぐりぐりイベント
   const face=document.getElementById('clockFace');
