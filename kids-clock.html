@@ -446,37 +446,6 @@
     color: var(--pink-dark);
   }
 
-  /* 朝スケジュールボタン */
-  .schedule-btn {
-    background: linear-gradient(135deg, #42a5f5, #1e88e5);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    padding: 14px 20px;
-    font-size: 1rem;
-    font-weight: 800;
-    font-family: inherit;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(30,136,229,0.4), 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.15s ease;
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .schedule-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(30,136,229,0.5);
-  }
-  .schedule-btn:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 8px rgba(30,136,229,0.4);
-  }
-  .schedule-btn.active {
-    background: linear-gradient(135deg, #90caf9, #42a5f5);
-    box-shadow: 0 0 20px rgba(30,136,229,0.6), 0 4px 16px rgba(30,136,229,0.4);
-  }
-
   @keyframes scheduleFlash {
     0%, 100% { background-color: rgba(255,255,255,0.7); }
     50% { background-color: rgba(66,165,245,0.2); }
@@ -523,7 +492,6 @@
 
   <div class="btn-row">
     <button class="speak-btn guriguri-btn" onclick="toggleGuriguri()">🌀 ぐりぐり</button>
-    <button class="speak-btn schedule-btn" id="scheduleBtn" onclick="toggleSchedule()">📢 あさのこえ</button>
   </div>
 
   <div class="alarm-area">
@@ -671,6 +639,7 @@ function updateClock() {
 
   if (simpleActive) updateSimpleHighlights();
   checkAlarm(now);
+  checkSchedule(now);
 }
 
 // ===== 午前・午後ヘルパー =====
@@ -1203,6 +1172,57 @@ function updateGuriguriDisplay() {
     `${period} <span style="color:#e53935">${h12}</span>:<span style="color:#1565c0">${mm}</span>`;
   document.getElementById('speechBubble').innerHTML =
     `🌀 ${period} <span style="color:#e53935;font-weight:800">${h12}じ</span> <span style="color:#1565c0;font-weight:800">${m}ふん</span>`;
+}
+
+// ===== 朝の自動音声スケジュール =====
+const scheduleFired = {};
+
+const voiceSchedule = [
+  // 朝
+  { h: 7, m: 5,  text: 'おはようまりこちゃん、さあ、朝ごはんを食べて元気になろう' },
+  { h: 7, m: 15, text: '朝ごはんは美味しいかな？７時３０分までにはたべてね。あと１５分。朝ごはんを楽しんでね。' },
+  { h: 7, m: 30, text: 'ごちそうさまはできたかな？次は何やる？歯磨きかな？着替えかな？それとも髪をととのえる？' },
+  { h: 7, m: 45, text: '学校の準備はできたかな？もういっかいチェックしてみよう。' },
+  { h: 8, m: 0,  text: 'さあ学校の時間だ、今日も楽しいといいね。いってらっしゃいだぜマジで！' },
+  // 夜
+  { h: 19, m: 0,  text: 'こんばんわ、マリスコだよ。まりこちゃん今日も1日お疲れ様。もう少しで寝る時間だね一緒に寝る準備をしよう。メニューをみてできることからやっていってね。' },
+  { h: 19, m: 15, text: '何か一つできたかな？やったことをボタンを押して消していこう。' },
+  { h: 19, m: 30, text: '歯磨きは終わったかな？終わってなかったら虫歯にならないように磨こうね。' },
+  { h: 20, m: 0,  text: 'さあベッドに入る時間だ、みんなにおやすみをいいましょう。おやすみまりこちゃん。' },
+];
+
+function checkSchedule(now) {
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+  const key = h + ':' + m;
+
+  for (const entry of voiceSchedule) {
+    if (entry.h === h && entry.m === m && s === 0 && !scheduleFired[key]) {
+      scheduleFired[key] = true;
+      speakSchedule(entry.text);
+      break;
+    }
+  }
+}
+
+function speakSchedule(text) {
+  // 吹き出しに表示
+  document.getElementById('speechBubble').textContent = '📢 ' + text;
+  document.getElementById('speechBubble').classList.add('schedule-speaking');
+  setTimeout(() => {
+    document.getElementById('speechBubble').classList.remove('schedule-speaking');
+  }, 3000);
+
+  // 音声で読み上げ
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'ja-JP';
+    utter.rate = 0.9;
+    utter.pitch = 1.2;
+    window.speechSynthesis.speak(utter);
+  }
 }
 
 // ===== 初期化 =====
