@@ -61,6 +61,14 @@ canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-rad
 .moon-box{width:64px;height:64px;position:relative;flex-shrink:0}
 .moon-box canvas{width:100%;height:100%}
 
+/* 学校の行事 */
+.schedule-section{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding:2px 0 2px 6px;border-left:2px solid var(--pink-light)}
+.schedule-row{display:flex;align-items:baseline;gap:6px;font-weight:800;line-height:1.25}
+.schedule-label{font-size:0.8rem;color:var(--pink-dark);flex-shrink:0;min-width:3.2em}
+.schedule-text{font-size:0.95rem;color:#333;word-break:break-word}
+.schedule-text.none{color:#aaa;font-weight:700}
+.schedule-section.empty{display:none}
+
 /* ゴミセクション */
 .garbage-section{background:none;box-shadow:none;padding:12px 0}
 .garbage-label{font-size:1.2rem;font-weight:800;color:var(--pink-dark);margin-bottom:10px}
@@ -181,6 +189,10 @@ canvas.sector-canvas{position:absolute;inset:0;width:100%;height:100%;border-rad
           <div class="main-date" id="dateMain"></div>
         </div>
         <div class="moon-box"><canvas id="moonCanvas" width="112" height="112"></canvas></div>
+        <div class="schedule-section" id="scheduleSection">
+          <div class="schedule-row"><span class="schedule-label">きょう</span><span class="schedule-text" id="scheduleToday"></span></div>
+          <div class="schedule-row"><span class="schedule-label">あした</span><span class="schedule-text" id="scheduleTomorrow"></span></div>
+        </div>
       </div>
       <div class="gomi-weather-row">
         <div class="garbage-section">
@@ -580,11 +592,127 @@ function updateGuriguriDisplay(){
 // ===== 日付表示 =====
 const WEEKDAY_SHORT = ['日','月','火','水','木','金','土'];
 
+// ===== 学校の行事（まりこちゃん・1年生） =====
+// 形式: 'YYYY-MM-DD': '行事名'
+// 1年生に関係ないもの（5年移動教室、7〜9年テスト等）は除外済
+const SCHOOL_SCHEDULE = {
+  // 4月
+  '2026-04-06': '始業式・着任式',
+  '2026-04-07': '入学式',
+  '2026-04-14': '保護者会（1〜3年）・1年生をむかえる会',
+  '2026-04-17': '避難訓練・給食開始',
+  '2026-04-25': '学校公開・PTA総会',
+  // 5月
+  '2026-05-01': '離任式',
+  '2026-05-11': '交通安全教室（1年）',
+  '2026-05-12': '避難訓練',
+  '2026-05-19': '運動会全校練習',
+  '2026-05-26': '運動会全校練習',
+  '2026-05-30': 'いずみの森大運動会',
+  // 6月
+  '2026-06-01': '振替休業日',
+  '2026-06-02': '大運動会予備日',
+  '2026-06-03': '大運動会予備日',
+  '2026-06-08': '避難訓練・わくわく清掃',
+  '2026-06-09': '水泳指導開始',
+  '2026-06-16': 'いのちの日',
+  '2026-06-20': '土曜授業・体力テスト',
+  '2026-06-22': '振替休業日',
+  // 7月
+  '2026-07-02': '保護者会（1年）',
+  '2026-07-06': '学校公開',
+  '2026-07-07': '避難訓練（一斉下校）',
+  '2026-07-17': '全校面談',
+  '2026-07-20': '海の日',
+  '2026-07-21': '全校面談',
+  '2026-07-22': '全校面談',
+  '2026-07-23': '全校面談',
+  '2026-07-24': '水泳指導終',
+  '2026-07-25': '終業式',
+  '2026-07-26': '夏季休業日始',
+  // 8月
+  '2026-08-10': '学校閉庁日',
+  '2026-08-12': '学校閉庁日',
+  '2026-08-13': '学校閉庁日',
+  '2026-08-30': '夏季休業日終',
+  '2026-08-31': '始業式・避難訓練（引き取り）',
+  // 9月
+  '2026-09-01': '給食始',
+  '2026-09-21': '敬老の日',
+  '2026-09-22': '国民の休日',
+  '2026-09-23': '秋分の日',
+  '2026-09-30': '避難訓練',
+  // 10月
+  '2026-10-01': '都民の日',
+  '2026-10-06': '避難訓練',
+  '2026-10-07': '小中一貫教育の日',
+  '2026-10-12': 'スポーツの日',
+  '2026-10-22': 'いずみの森フェスティバル（1日目）',
+  '2026-10-23': 'いずみの森フェスティバル（2日目）',
+  '2026-10-24': 'いずみの森フェスティバル（3日目）',
+  '2026-10-26': '振替休業日',
+  // 11月
+  '2026-11-03': '文化の日',
+  '2026-11-09': '学校公開',
+  '2026-11-10': '学校公開',
+  '2026-11-14': '土曜授業',
+  '2026-11-19': '避難訓練',
+  '2026-11-23': '勤労感謝の日',
+  // 12月
+  '2026-12-08': '避難訓練',
+  '2026-12-24': '給食終・大掃除',
+  '2026-12-25': '終業式',
+  '2026-12-26': '冬季休業日始',
+  '2026-12-28': '学校閉庁日',
+  '2026-12-29': '学校閉庁日',
+  '2026-12-30': '学校閉庁日',
+  // 1月
+  '2027-01-01': '元日・学校閉庁日',
+  '2027-01-07': '冬季休業日終',
+  '2027-01-08': '始業式',
+  '2027-01-11': '成人の日',
+  '2027-01-12': '給食始',
+  '2027-01-14': '避難訓練',
+  '2027-01-15': '学校公開',
+  '2027-01-16': '学校公開',
+  '2027-01-21': 'おおる展始',
+  // 2月
+  '2027-02-03': '避難訓練',
+  '2027-02-11': '建国記念の日',
+  '2027-02-22': '小中一貫教育の日',
+  '2027-02-23': '天皇誕生日',
+  // 3月
+  '2027-03-02': '保護者会（1・2年）',
+  '2027-03-04': '避難訓練',
+  '2027-03-12': '卒業生を送る会',
+  '2027-03-20': '春分の日',
+  '2027-03-22': '振替休日',
+  '2027-03-24': '給食終・大掃除',
+  '2027-03-25': '修了式',
+  '2027-03-26': '春季休業日始',
+};
+
 function updateDate(){
   const now=new Date(), y=now.getFullYear(), mo=now.getMonth()+1, d=now.getDate(), dow=now.getDay();
   const reiwa=y-2018;
   document.getElementById('dateYear').textContent=`${y}年（令和${reiwa}年）`;
   document.getElementById('dateMain').innerHTML=`${mo}月${d}日 <span style="color:${dow===0?'#e53935':dow===6?'#1565c0':'#333'}">(${WEEKDAY_SHORT[dow]})</span>`;
+  updateSchedule(now);
+}
+
+function updateSchedule(now){
+  const tm=new Date(now); tm.setDate(tm.getDate()+1);
+  const today=SCHOOL_SCHEDULE[dateStr(now)]||'';
+  const tomorrow=SCHOOL_SCHEDULE[dateStr(tm)]||'';
+  const section=document.getElementById('scheduleSection');
+  if(!today && !tomorrow){ section.classList.add('empty'); return; }
+  section.classList.remove('empty');
+  const tEl=document.getElementById('scheduleToday');
+  const mEl=document.getElementById('scheduleTomorrow');
+  if(today){ tEl.textContent=today; tEl.classList.remove('none'); }
+  else{ tEl.textContent='ー'; tEl.classList.add('none'); }
+  if(tomorrow){ mEl.textContent=tomorrow; mEl.classList.remove('none'); }
+  else{ mEl.textContent='ー'; mEl.classList.add('none'); }
 }
 
 // ===== 月齢 =====
